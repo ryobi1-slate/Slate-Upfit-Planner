@@ -1,0 +1,17 @@
+{
+  "name": "slate-upfit-planner",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "wp-scripts build assets/src/index.js --output-path=assets/dist",
+    "start": "wp-scripts start assets/src/index.js --output-path=assets/dist",
+    "lint:js": "wp-scripts lint-js assets/src",
+    "format": "wp-scripts format"
+  },
+  "dependencies": {
+    "@wordpress/element": "latest"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "latest"
+  }
+}
