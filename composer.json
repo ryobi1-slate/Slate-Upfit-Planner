@@ -1,0 +1,14 @@
+{
+  "name": "slate/upfit-planner",
+  "description": "Standalone WordPress commercial van upfit planner.",
+  "type": "wordpress-plugin",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Slate\\UpfitPlanner\\": "src/"
+    }
+  }
+}
