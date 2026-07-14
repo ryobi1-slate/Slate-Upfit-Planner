@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slatebuilt.com/schemas/upfit-planner-configuration-1.0.json",
+  "title": "Slate Upfit Planner Configuration",
+  "type": "object",
+  "required": ["schemaVersion", "vehicle", "components", "validation", "totals"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "configurationId": { "type": "string" },
+    "vehicle": { "type": "object" },
+    "components": { "type": "array", "items": { "type": "object" } },
+    "infrastructure": { "type": "array", "items": { "type": "object" } },
+    "exteriorEquipment": { "type": "array", "items": { "type": "object" } },
+    "validation": { "type": "array", "items": { "type": "object" } },
+    "totals": { "type": "object" },
+    "dealerNotes": { "type": "string", "maxLength": 5000 }
+  },
+  "additionalProperties": true
+}
