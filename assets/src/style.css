@@ -1,0 +1,43 @@
+:root {
+  --slate-sage: #404f4b;
+  --slate-sand: #e1dfc8;
+  --slate-arches: #d86b19;
+  --slate-redwood: #0f342a;
+  --slate-ink: #000000;
+  --slate-surface: #fbfaf5;
+}
+
+.slate-upfit-planner-root {
+  min-height: 420px;
+  background: var(--slate-surface);
+  color: var(--slate-ink);
+  font-family: "Roboto Flex", Arial, sans-serif;
+}
+
+.slate-upfit-planner-shell {
+  padding: 32px;
+}
+
+.slate-upfit-planner-header {
+  max-width: 760px;
+  border: 1px solid color-mix(in srgb, var(--slate-sage) 25%, white);
+  background: white;
+  padding: 28px;
+}
+
+.slate-upfit-planner-eyebrow {
+  margin: 0 0 10px;
+  color: var(--slate-arches);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.slate-upfit-planner-header h1 {
+  margin: 0 0 12px;
+  color: var(--slate-sage);
+  font-stretch: condensed;
+  font-weight: 900;
+  text-transform: uppercase;
+}
