@@ -9,7 +9,7 @@
  * Text Domain: slate-upfit-planner
  */
 
-declared(strict_types=1);
+declare(strict_types=1);
 
 if (! defined('ABSPATH')) {
     exit;
@@ -25,8 +25,8 @@ $autoload = SLATE_UPFIT_PLANNER_DIR . 'vendor/autoload.php';
 if (is_readable($autoload)) {
     require_once $autoload;
 } else {
-    require_once SLATE_UPFIT_PLANNER_DIR . 'src/Plugin.php';
     require_once SLATE_UPFIT_PLANNER_DIR . 'src/Integration/HostAdapterInterface.php';
+    require_once SLATE_UPFIT_PLANNER_DIR . 'src/Plugin.php';
 }
 
 add_action('plugins_loaded', static function (): void {
