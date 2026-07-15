@@ -2,18 +2,71 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://slatebuilt.com/schemas/upfit-planner-configuration-1.0.json",
   "title": "Slate Upfit Planner Configuration",
+  "description": "Versioned normalized configuration payload exchanged between the planner, WordPress REST, and the host adapter. This is the single source of truth for save and quote handoff.",
   "type": "object",
-  "required": ["schemaVersion", "vehicle", "components", "validation", "totals"],
+  "required": [
+    "schema_version",
+    "configuration_id",
+    "vehicle",
+    "placements",
+    "infrastructure",
+    "exterior_equipment",
+    "validation",
+    "totals",
+    "dealer_notes"
+  ],
   "properties": {
-    "schemaVersion": { "const": "1.0" },
-    "configurationId": { "type": "string" },
-    "vehicle": { "type": "object" },
-    "components": { "type": "array", "items": { "type": "object" } },
-    "infrastructure": { "type": "array", "items": { "type": "object" } },
-    "exteriorEquipment": { "type": "array", "items": { "type": "object" } },
-    "validation": { "type": "array", "items": { "type": "object" } },
-    "totals": { "type": "object" },
-    "dealerNotes": { "type": "string", "maxLength": 5000 }
+    "schema_version": {
+      "const": "1.0",
+      "description": "Schema contract version. Bump on breaking changes."
+    },
+    "configuration_id": {
+      "type": ["string", "null"],
+      "description": "Host/local identifier once saved; null while unsaved."
+    },
+    "vehicle": {
+      "type": "object",
+      "description": "Selected vehicle and geometry reference.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "wheelbase": { "type": "string" },
+        "wall": { "type": ["string", "null"] }
+      }
+    },
+    "placements": {
+      "type": "array",
+      "description": "Placed components with their positions on a wall/zone.",
+      "items": { "type": "object" }
+    },
+    "infrastructure": {
+      "type": "array",
+      "description": "Electrical, power, and structural infrastructure items.",
+      "items": { "type": "object" }
+    },
+    "exterior_equipment": {
+      "type": "array",
+      "description": "Exterior-mounted equipment (racks, ladders, awnings).",
+      "items": { "type": "object" }
+    },
+    "validation": {
+      "type": "array",
+      "description": "Fitment issues surfaced by the engine (errors/warnings/info).",
+      "items": { "type": "object" }
+    },
+    "totals": {
+      "type": "object",
+      "description": "Roll-up totals (wall usage, payload, package value).",
+      "properties": {
+        "wall_usage": { "type": "object" },
+        "payload": { "type": "object" },
+        "package_value": { "type": ["number", "null"] }
+      }
+    },
+    "dealer_notes": {
+      "type": "string",
+      "maxLength": 5000
+    }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

@@ -2,16 +2,23 @@
   "name": "slate-upfit-planner",
   "version": "0.1.0",
   "private": true,
+  "description": "Standalone WordPress commercial van upfit planner (React + TypeScript).",
   "scripts": {
-    "build": "wp-scripts build assets/src/index.js --output-path=assets/dist",
-    "start": "wp-scripts start assets/src/index.js --output-path=assets/dist",
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "lint": "wp-scripts lint-js assets/src",
     "lint:js": "wp-scripts lint-js assets/src",
-    "format": "wp-scripts format"
+    "typecheck": "tsc --noEmit",
+    "test": "wp-scripts test-unit-js",
+    "format": "wp-scripts format assets/src"
   },
   "dependencies": {
-    "@wordpress/element": "latest"
+    "@wordpress/element": "^5.35.0"
   },
   "devDependencies": {
-    "@wordpress/scripts": "latest"
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@wordpress/scripts": "^27.9.0",
+    "typescript": "^5.4.5"
   }
 }
