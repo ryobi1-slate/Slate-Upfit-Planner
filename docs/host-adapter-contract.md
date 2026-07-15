@@ -45,6 +45,7 @@ saveConfiguration(array $payload): [
     'ok' => bool,
     'configuration_id' => string|null,
     'errors' => string[],
+    'status' => int,   // optional; HTTP status for a failure (e.g. 403). Defaults to 422.
 ]
 
 addConfigurationToQuote(array $payload): [
@@ -52,8 +53,16 @@ addConfigurationToQuote(array $payload): [
     'quote_id' => string|null,
     'quote_url' => string|null,
     'errors' => string[],
+    'status' => int,   // optional; HTTP status for a failure (e.g. 403). Defaults to 422.
 ]
 ```
+
+When `ok` is `false`, the REST layer maps the result to an HTTP status: it uses
+the optional `status` field when present (e.g. return `403` to signal an
+authenticated user who fails a host permission/dealer-approval check), otherwise
+it defaults to `422` (unprocessable payload). Authentication itself is enforced
+earlier: unauthenticated writes are rejected with `401` before the adapter is
+called.
 
 ## Registration
 

@@ -76,12 +76,69 @@ final class SchemaValidator
             }
         }
 
+        // Each placement must match the canonical schema (id, sku, wall, and a
+        // numeric position.x/position.y) so malformed items such as `[{}]` are
+        // rejected before persistence or quote handoff.
+        if (array_key_exists('placements', $payload) && is_array($payload['placements'])) {
+            $index = 0;
+            foreach ($payload['placements'] as $placement) {
+                foreach ($this->validatePlacement($placement, $index) as $error) {
+                    $errors[] = $error;
+                }
+                $index++;
+            }
+        }
+
         if (array_key_exists('totals', $payload) && ! is_array($payload['totals'])) {
             $errors[] = 'totals must be an object.';
         }
 
         if (array_key_exists('dealer_notes', $payload) && ! is_string($payload['dealer_notes'])) {
             $errors[] = 'dealer_notes must be a string.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validate a single placement item's structure and types, mirroring the
+     * `placements.items` definition in data/configuration-schema.json.
+     *
+     * @param mixed $placement Raw placement item (expected associative array).
+     * @param int   $index     Position in the placements array, for messaging.
+     * @return string[] Errors for this item. Empty === valid.
+     */
+    private function validatePlacement(mixed $placement, int $index): array
+    {
+        $errors = [];
+        $label = sprintf('placements[%d]', $index);
+
+        if (! is_array($placement)) {
+            $errors[] = sprintf('%s must be an object.', $label);
+
+            return $errors;
+        }
+
+        foreach (['id', 'sku', 'wall'] as $key) {
+            if (! array_key_exists($key, $placement)) {
+                $errors[] = sprintf('%s.%s is required.', $label, $key);
+            } elseif (! is_string($placement[$key])) {
+                $errors[] = sprintf('%s.%s must be a string.', $label, $key);
+            }
+        }
+
+        if (! array_key_exists('position', $placement)) {
+            $errors[] = sprintf('%s.position is required.', $label);
+        } elseif (! is_array($placement['position'])) {
+            $errors[] = sprintf('%s.position must be an object.', $label);
+        } else {
+            foreach (['x', 'y'] as $axis) {
+                if (! array_key_exists($axis, $placement['position'])) {
+                    $errors[] = sprintf('%s.position.%s is required.', $label, $axis);
+                } elseif (! is_int($placement['position'][$axis]) && ! is_float($placement['position'][$axis])) {
+                    $errors[] = sprintf('%s.position.%s must be a number.', $label, $axis);
+                }
+            }
         }
 
         return $errors;

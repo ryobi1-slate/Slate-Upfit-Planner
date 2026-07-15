@@ -7,6 +7,7 @@ namespace Slate\UpfitPlanner\Rest;
 use Slate\UpfitPlanner\Integration\HostAdapterInterface;
 use Slate\UpfitPlanner\Persistence\ConfigurationRepository;
 use Slate\UpfitPlanner\Support\SchemaValidator;
+use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -54,14 +55,54 @@ final class RestController
     }
 
     /**
-     * Nonce-based write guard. Real capability checks are layered in later
-     * phases once host identity wiring lands.
+     * Write guard for all mutating routes (save/update configuration, quote
+     * handoff).
+     *
+     * The standalone demo UI still renders and runs on local state — only
+     * server-side writes are gated here:
+     *   - unauthenticated request  -> 401 (rest_not_logged_in)
+     *   - authenticated, bad nonce -> 403 (rest_cookie_invalid_nonce)
+     *
+     * Deeper host permission/dealer-approval checks (403) are enforced when the
+     * host adapter processes the request; that wiring lands with host identity
+     * in a later phase.
+     *
+     * @return bool|WP_Error true when allowed, WP_Error (with a status) otherwise.
      */
-    public function canWrite(WP_REST_Request $request): bool
+    public function canWrite(WP_REST_Request $request): bool|WP_Error
     {
-        $nonce = $request->get_header('X-WP-Nonce');
+        if (! is_user_logged_in()) {
+            return new WP_Error(
+                'rest_not_logged_in',
+                'Authentication is required to write planner data.',
+                ['status' => 401]
+            );
+        }
 
-        return is_string($nonce) && (bool) wp_verify_nonce($nonce, 'wp_rest');
+        $nonce = $request->get_header('X-WP-Nonce');
+        if (! is_string($nonce) || ! wp_verify_nonce($nonce, 'wp_rest')) {
+            return new WP_Error(
+                'rest_cookie_invalid_nonce',
+                'Invalid or missing request nonce.',
+                ['status' => 403]
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * HTTP status for a failed host/repository result. A host may signal a
+     * permission failure with an explicit `status` (e.g. 403); otherwise the
+     * failure is treated as an unprocessable payload (422).
+     *
+     * @param array<string, mixed> $result
+     */
+    private function failureStatus(array $result): int
+    {
+        return isset($result['status']) && is_int($result['status'])
+            ? $result['status']
+            : 422;
     }
 
     public function getContext(): WP_REST_Response
@@ -90,7 +131,10 @@ final class RestController
 
         $result = $this->repository->save($payload);
 
-        return new WP_REST_Response($result, $result['ok'] ? 200 : 422);
+        return new WP_REST_Response(
+            $result,
+            ! empty($result['ok']) ? 200 : $this->failureStatus($result)
+        );
     }
 
     public function addToQuote(WP_REST_Request $request): WP_REST_Response
@@ -107,9 +151,13 @@ final class RestController
         }
 
         // Delegate the actual quote creation to the host. The planner does not
-        // create quotes or reach Business Central directly.
+        // create quotes or reach Business Central directly. A host that denies
+        // the authenticated user on permission grounds can return status 403.
         $result = $this->hostAdapter->addConfigurationToQuote($payload);
 
-        return new WP_REST_Response($result, ! empty($result['ok']) ? 200 : 422);
+        return new WP_REST_Response(
+            $result,
+            ! empty($result['ok']) ? 200 : $this->failureStatus($result)
+        );
     }
 }
