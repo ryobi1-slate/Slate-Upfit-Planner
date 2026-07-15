@@ -94,10 +94,11 @@ final class SchemaValidator
         }
 
         if (is_string($value)) {
-            if (isset($schema['minLength']) && strlen($value) < (int) $schema['minLength']) {
+            $length = $this->stringLength($value);
+            if (isset($schema['minLength']) && $length < (int) $schema['minLength']) {
                 $errors[] = sprintf('%s is shorter than the minimum length.', $path);
             }
-            if (isset($schema['maxLength']) && strlen($value) > (int) $schema['maxLength']) {
+            if (isset($schema['maxLength']) && $length > (int) $schema['maxLength']) {
                 $errors[] = sprintf('%s exceeds the maximum length.', $path);
             }
         }
@@ -142,6 +143,7 @@ final class SchemaValidator
 
         foreach ($value as $key => $item) {
             if (! is_string($key)) {
+                $errors[] = sprintf('%s.%s is not allowed.', $path, (string) $key);
                 continue;
             }
             if (isset($properties[$key]) && is_array($properties[$key])) {
@@ -155,6 +157,17 @@ final class SchemaValidator
         }
 
         return $errors;
+    }
+
+    private function stringLength(string $value): int
+    {
+        if (function_exists('mb_strlen')) {
+            return mb_strlen($value, 'UTF-8');
+        }
+
+        $count = preg_match_all('/./us', $value, $matches);
+
+        return $count === false ? strlen($value) : $count;
     }
 
     private function matchesType(mixed $value, mixed $expected): bool

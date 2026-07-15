@@ -139,6 +139,28 @@ $tests['rejects unknown skus'] = static function () use ($validator, $fixture): 
     return $validator->validate($fixture) !== [];
 };
 
+$tests['rejects integer-like unknown object keys'] = static function () use ($validator, $fixture): bool {
+    $numericStringKey = json_decode(
+        json_encode(array_merge($fixture, ['123' => 'unknown']), JSON_THROW_ON_ERROR),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+    $integerKey = $fixture;
+    $integerKey[456] = 'unknown';
+
+    return $validator->validate($numericStringKey) !== []
+        && $validator->validate($integerKey) !== [];
+};
+
+$tests['counts unicode string lengths as code points'] = static function () use ($validator, $fixture): bool {
+    $fixture['dealer_notes'] = str_repeat("\u{00E9}", 5000);
+    $validAtLimit = $validator->validate($fixture) === [];
+    $fixture['dealer_notes'] .= "\u{00E9}";
+
+    return $validAtLimit && $validator->validate($fixture) !== [];
+};
+
 $tests['compatibility fixtures match schema'] = static function () use ($validator, $fixture, $root): bool {
     $cases = json_decode(
         (string) file_get_contents($root . '/tests/fixtures/compatibility/phase-2-cases.json'),
