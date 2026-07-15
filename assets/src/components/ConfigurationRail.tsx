@@ -1,110 +1,127 @@
 /**
- * Left configuration rail: vehicle, wall, and catalog product selection.
+ * Left configuration rail: vehicle summary, wall switch, and the shelf catalog.
+ * Selecting a product arms it for placement (hover + click on the canvas), and
+ * "Add" auto-places it at the first legal open spot.
  */
 
 import { usePlanner } from '../hooks/usePlanner';
 import type { WallId } from '../types';
 
 export function ConfigurationRail() {
-	const { state, catalog, selectWall, selectProduct, placeComponent } =
-		usePlanner();
+	const {
+		state,
+		catalog,
+		remainingOnActiveWall,
+		selectProduct,
+		switchWall,
+		placeSelected,
+		clearWall,
+	} = usePlanner();
+	const { vehicle, activeWall, selectedSku } = state;
 
 	return (
 		<aside className="sup-rail" aria-label="Configuration">
 			<section className="sup-panel">
 				<h2 className="sup-panel__title">Vehicle</h2>
 				<p className="sup-panel__hint">
-					Placeholder catalog for Phase 1.
+					{ vehicle.name } · { vehicle.length }&quot; ×{ ' ' }
+					{ vehicle.width }&quot; · { vehicle.payloadCapacity } lb
+					payload
 				</p>
 
 				<div className="sup-field">
-					<label className="sup-field__label" htmlFor="sup-vehicle">
-						Chassis
-					</label>
-					<select
-						id="sup-vehicle"
-						className="sup-select"
-						value={ state.vehicle.id }
-						disabled
-					>
-						<option value={ state.vehicle.id }>
-							{ state.vehicle.name }
-						</option>
-					</select>
-				</div>
-
-				<div className="sup-field">
-					<span className="sup-field__label">Wall</span>
-					<div className="sup-wall-tabs">
-						{ state.vehicle.walls.map( ( wall ) => (
+					<span className="sup-field__label">Wall to configure</span>
+					<div className="sup-wall-tabs" role="tablist">
+						{ vehicle.walls.map( ( w ) => (
 							<button
-								key={ wall.id }
+								key={ w.wall }
 								type="button"
+								role="tab"
+								aria-selected={ activeWall === w.wall }
 								className={
 									'sup-wall-tab' +
-									( state.activeWall === wall.id
+									( activeWall === w.wall
 										? ' sup-wall-tab--active'
 										: '' )
 								}
-								onClick={ () =>
-									selectWall( wall.id as WallId )
-								}
+								onClick={ () => switchWall( w.wall as WallId ) }
 							>
-								{ wall.label }
+								{ w.label }
 							</button>
 						) ) }
 					</div>
 				</div>
+				<p className="sup-panel__hint">
+					{ Math.max( 0, Math.round( remainingOnActiveWall ) ) }&quot;
+					mountable length remaining on this wall.
+				</p>
 			</section>
 
 			<section className="sup-panel">
-				<h2 className="sup-panel__title">Products</h2>
+				<h2 className="sup-panel__title">Shelves</h2>
 				<p className="sup-panel__hint">
-					Select a SKU, then add it to the active wall.
+					Select a shelf, then click the canvas to place — or use Add.
 				</p>
 
 				<div className="sup-catalog">
 					{ catalog.map( ( component ) => {
 						const selected = state.selectedSku === component.sku;
 						return (
-							<button
+							<div
 								key={ component.sku }
-								type="button"
 								className={
 									'sup-card' +
 									( selected ? ' sup-card--selected' : '' )
 								}
-								onClick={ () => {
-									const nextSelected = ! selected;
-									selectProduct(
-										nextSelected ? component.sku : null
-									);
-									// Only place when selecting, never on deselect.
-									if ( nextSelected && state.activeWall ) {
-										placeComponent(
-											component.sku,
-											state.activeWall
-										);
-									}
-								} }
 							>
-								<span>
+								<button
+									type="button"
+									className="sup-card__select"
+									aria-pressed={ selected }
+									onClick={ () =>
+										selectProduct(
+											selected ? null : component.sku
+										)
+									}
+								>
 									<span className="sup-card__name">
 										{ component.name }
 									</span>
-									<br />
 									<span className="sup-card__meta">
-										{ component.width }×{ component.height }{ ' ' }
-										mm · { component.weight } kg
+										{ component.sku } · { component.length }
+										&quot; L × { component.depth }&quot; D ·{ ' ' }
+										{ component.weight } lb
 									</span>
-								</span>
-								<span className="sup-card__value">
-									${ component.listValue }
-								</span>
-							</button>
+								</button>
+								<button
+									type="button"
+									className="sup-card__add"
+									aria-label={ `Add ${ component.name } to ${ activeWall } wall` }
+									onClick={ () => {
+										selectProduct( component.sku );
+										placeSelected( activeWall );
+									} }
+								>
+									+ Add
+								</button>
+							</div>
 						);
 					} ) }
 				</div>
+
+				<button
+					type="button"
+					className="sup-clear-wall"
+					onClick={ () => clearWall( activeWall ) }
+				>
+					Clear { activeWall } wall
+				</button>
+				{ selectedSku && (
+					<p className="sup-panel__hint">
+						{ state.componentsBySku[ selectedSku ]?.name } armed —
+						click the canvas to place.
+					</p>
+				) }
 			</section>
 		</aside>
 	);

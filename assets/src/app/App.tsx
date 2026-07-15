@@ -2,8 +2,9 @@
  * Product shell composition: top nav + three-column body
  * (configuration rail · canvas workspace · build-sheet rail).
  *
- * Phase 1 renders the shell against placeholder data. The full planner behavior
- * is layered in behind the existing state/engine boundaries in later phases.
+ * Phase 2 renders the Stitch shell with the real interactive driver/passenger
+ * wall canvas and fitment engine, against the fixed Westcan shelf catalog and
+ * Sprinter 144 geometry.
  */
 
 import { PlannerProvider } from '../state/context';
@@ -12,11 +13,8 @@ import { ConfigurationRail } from '../components/ConfigurationRail';
 import { CanvasWorkspace } from '../components/CanvasWorkspace';
 import { BuildSheetRail } from '../components/BuildSheetRail';
 import { getBootstrapContext } from '../services/bootstrap';
-import {
-	COMPONENTS_BY_SKU,
-	INITIAL_PLACEMENTS,
-	SPRINTER_144,
-} from '../data/placeholder';
+import { SPRINTER_144_HR } from '../data/geometry';
+import { COMPONENTS_BY_SKU, INITIAL_PLACEMENTS } from '../data/catalog';
 
 export function App() {
 	const ctx = getBootstrapContext();
@@ -24,7 +22,7 @@ export function App() {
 	return (
 		<PlannerProvider
 			init={ {
-				vehicle: SPRINTER_144,
+				vehicle: SPRINTER_144_HR,
 				componentsBySku: COMPONENTS_BY_SKU,
 				placements: INITIAL_PLACEMENTS,
 				activeWall: 'driver',

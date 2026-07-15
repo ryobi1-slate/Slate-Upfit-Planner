@@ -1,5 +1,9 @@
 /**
  * Payload / weight and normalized-payload assembly. Pure functions only.
+ *
+ * Phase 2 keeps the driver/passenger weight-sum core of the reference
+ * `computePayload()`; roof/rear centre-of-gravity bias and infrastructure
+ * weight deltas are out of Phase 2 scope.
  */
 
 import {
@@ -27,38 +31,32 @@ export function calculatePayload(
 	placements: Placement[],
 	componentsBySku: Record< string, PlannerComponent >
 ): PayloadSummary {
-	const componentWeight = placements.reduce(
-		( sum, p ) => sum + ( componentsBySku[ p.sku ]?.weight ?? 0 ),
-		0
-	);
+	let componentWeight = 0;
+	let driverWeight = 0;
+	let passengerWeight = 0;
 
-	// payloadCapacity is the weight the chassis can carry on top of its curb
-	// weight, so remaining payload is capacity minus placed component weight.
+	for ( const p of placements ) {
+		const w = componentsBySku[ p.sku ]?.weight ?? 0;
+		componentWeight += w;
+		if ( p.wall === 'driver' ) {
+			driverWeight += w;
+		} else if ( p.wall === 'passenger' ) {
+			passengerWeight += w;
+		}
+	}
+
+	// payloadCapacity is the weight the chassis can carry over curb weight, so
+	// remaining payload is capacity minus placed component weight.
 	const remaining = vehicle.payloadCapacity - componentWeight;
 
 	return {
 		componentWeight,
-		curbWeight: vehicle.curbWeight,
 		capacity: vehicle.payloadCapacity,
 		remaining,
 		overCapacity: remaining < 0,
+		driverWeight,
+		passengerWeight,
 	};
-}
-
-/**
- * Sum the placeholder catalog value of all placed components. Real pricing is
- * owned by the host — this is only a package-value indicator for the UI.
- * @param placements
- * @param componentsBySku
- */
-export function calculatePackageValue(
-	placements: Placement[],
-	componentsBySku: Record< string, PlannerComponent >
-): number {
-	return placements.reduce(
-		( sum, p ) => sum + ( componentsBySku[ p.sku ]?.listValue ?? 0 ),
-		0
-	);
 }
 
 /**
@@ -75,13 +73,15 @@ export function calculateTotals(
 	return {
 		wallUsage: calculateWallUsage( vehicle, placements, componentsBySku ),
 		payload: calculatePayload( vehicle, placements, componentsBySku ),
-		packageValue: calculatePackageValue( placements, componentsBySku ),
+		// Pricing is host-owned; no package value in standalone Phase 2.
+		packageValue: null,
 	};
 }
 
 /**
  * Assemble the versioned normalized payload for save / quote handoff. Runs
- * validation and totals so the emitted payload is self-describing.
+ * validation and totals so the emitted payload is self-describing. Coordinates
+ * are engineering inches — never pixels.
  * @param input
  * @param input.configurationId
  * @param input.vehicle

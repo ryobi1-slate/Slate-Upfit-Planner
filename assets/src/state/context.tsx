@@ -1,6 +1,6 @@
 /**
  * React Context wiring for the planner store. Components read state and dispatch
- * through this context; the reducer itself stays pure and framework-agnostic.
+ * through this context; the reducer stays pure and framework-agnostic.
  */
 
 import {
