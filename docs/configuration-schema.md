@@ -9,6 +9,15 @@ REST and the host adapter. It is the source of truth for save and quote handoff.
 
 Current version: **`1.0`**.
 
+The PHP `SchemaValidator` loads the canonical JSON file directly. Structural
+rules belong in the JSON Schema instead of being duplicated in PHP. Placement
+ID uniqueness remains a domain check because base JSON Schema cannot express
+uniqueness by one object field.
+
+Schema 1.0 rejects unsupported versions, walls outside `driver`/`passenger`,
+unknown Phase 2 SKUs, malformed or negative coordinates, extra object fields,
+and duplicate placement IDs.
+
 ## Shape
 
 ```json
@@ -27,17 +36,17 @@ Current version: **`1.0`**.
 
 ## Fields
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `schema_version` | `"1.0"` | Bumped on breaking changes. |
-| `configuration_id` | `string \| null` | Host/local id once saved; `null` while unsaved. |
-| `vehicle` | object | `{ id, name, wheelbase, wall }`. |
-| `placements` | array | Placed components: `{ id, sku, wall, position }`. `position.x` is **inches from the front** along the wall; `position.y` is the height offset from the floor (0 for Phase 2 floor-standing shelves). Coordinates are engineering inches — never pixels. |
-| `infrastructure` | array | Electrical/power/structural items (empty through Phase 2). |
-| `exterior_equipment` | array | Exterior-mounted equipment (empty through Phase 2). |
-| `validation` | array | Fitment issues: `{ code, severity, message, placement_id? }`. |
-| `totals` | object | `{ wall_usage, payload, package_value }`. |
-| `dealer_notes` | string | Free text, ≤ 5000 chars. |
+| Field                | Type             | Notes                                                                                                                                                                                                                                                   |
+| -------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema_version`     | `"1.0"`          | Bumped on breaking changes.                                                                                                                                                                                                                             |
+| `configuration_id`   | `string \| null` | Host/local id once saved; `null` while unsaved.                                                                                                                                                                                                         |
+| `vehicle`            | object           | `{ id, name, wheelbase, wall }`.                                                                                                                                                                                                                        |
+| `placements`         | array            | Placed components: `{ id, sku, wall, position }`. `position.x` is **inches from the front** along the wall; `position.y` is the height offset from the floor (0 for Phase 2 floor-standing shelves). Coordinates are engineering inches — never pixels. |
+| `infrastructure`     | array            | Electrical/power/structural items (empty through Phase 2).                                                                                                                                                                                              |
+| `exterior_equipment` | array            | Exterior-mounted equipment (empty through Phase 2).                                                                                                                                                                                                     |
+| `validation`         | array            | Fitment issues: `{ code, severity, message, placement_id? }`.                                                                                                                                                                                           |
+| `totals`             | object           | `{ wall_usage, payload, package_value }`.                                                                                                                                                                                                               |
+| `dealer_notes`       | string           | Free text, ≤ 5000 chars.                                                                                                                                                                                                                                |
 
 Field names are `snake_case` to match the JSON schema and the PHP boundary. The
 TypeScript layer mirrors these names on the payload type even though it uses

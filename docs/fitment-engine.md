@@ -10,11 +10,11 @@ drag-clamp logic in `VanCanvas(H).jsx`), re-homed into typed, tested modules.
 
 ## Modules
 
-| File | Exports |
-| --- | --- |
+| File                 | Exports                                                                                                                                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `engine/geometry.ts` | `getPlacementBounds`, `overlaps`, `getHardBlocks`, `intersectsBlockedZone`, `edgeInsideWheelWell`, `snapToIncrement`, `clampPlacement`, `findOpenPlacement`, `getOpenRuns`, `getRemainingWallLength`, `calculateWallUsage` |
-| `engine/fitment.ts` | `validatePlacement`, `checkPlacement`, `validateConfiguration`, `toFitmentResult` |
-| `engine/payload.ts` | `calculatePayload`, `calculateTotals`, `buildNormalizedPayload` |
+| `engine/fitment.ts`  | `validatePlacement`, `checkPlacement`, `validateConfiguration`, `toFitmentResult`                                                                                                                                          |
+| `engine/payload.ts`  | `calculatePayload`, `calculateTotals`, `buildNormalizedPayload`                                                                                                                                                            |
 
 ## Core functions
 
@@ -31,19 +31,19 @@ drag-clamp logic in `VanCanvas(H).jsx`), re-homed into typed, tested modules.
 
 ## Validation rules → codes
 
-| Rule | Code | Severity |
-| --- | --- | --- |
-| Roof/vehicle incompatibility | `INCOMPATIBLE_VEHICLE` | error |
-| Wrong wall for the component | `INCOMPATIBLE_WALL` | error |
-| Starts before the partition (front boundary) | `STARTS_IN_PARTITION` | error |
-| Extends past the rear boundary | `EXCEEDS_CARGO` | error |
-| Overlaps a no-mount / contoured zone | `BLOCKED_ZONE` | error |
-| Blocks the sliding-door opening | `DOOR_CONFLICT` | error |
-| Front edge lands inside a wheel well | `WHEEL_WELL_START` | **warning** |
-| Back edge lands inside a wheel well | `WHEEL_WELL_END` | **warning** |
-| Overlaps another shelf on the same wall | `SHELF_COLLISION` | error |
+| Rule                                         | Code                   | Severity    |
+| -------------------------------------------- | ---------------------- | ----------- |
+| Roof/vehicle incompatibility                 | `INCOMPATIBLE_VEHICLE` | error       |
+| Wrong wall for the component                 | `INCOMPATIBLE_WALL`    | error       |
+| Starts before the partition (front boundary) | `STARTS_IN_PARTITION`  | error       |
+| Extends past the rear boundary               | `EXCEEDS_CARGO`        | error       |
+| Overlaps a no-mount / contoured zone         | `BLOCKED_ZONE`         | error       |
+| Blocks the sliding-door opening              | `DOOR_CONFLICT`        | error       |
+| Front edge lands inside a wheel well         | `WHEEL_WELL_START`     | **warning** |
+| Back edge lands inside a wheel well          | `WHEEL_WELL_END`       | **warning** |
+| Overlaps another shelf on the same wall      | `SHELF_COLLISION`      | error       |
 
-**Wheel wells are soft.** A shelf may *span* a wheel well; only its endpoints
+**Wheel wells are soft.** A shelf may _span_ a wheel well; only its endpoints
 may not land inside one. This mirrors how dealers mount a single long shelf over
 an arch, and matches the reference behavior. A span-only wheel-well condition is
 a warning, not a blocker.
@@ -53,13 +53,13 @@ a warning, not a blocker.
 
 ## Ported vs. changed
 
-| Claude reference | Production implementation | Notes |
-| --- | --- | --- |
-| `issues()` (string reasons + `code`) | `validatePlacement()` → typed `FitmentIssue[]` | Same rules; codes normalized to a typed union; each issue carries an inch `range` for canvas highlighting. |
-| `findSpot()` | `findOpenPlacement()` | Same scan; returns `null` instead of falling back to the partition when nothing fits (the caller decides). |
-| drag clamp in `VanCanvas(H)` | `clampPlacement()` + `snapToIncrement()` | Extracted to pure helpers; identical `max(partition, min(length−len, round(pos)))`. |
-| `computePayload()` | `calculatePayload()` | Driver/passenger weight-sum core only. Roof/rear CG bias, infrastructure and accessory weight deltas are **out of Phase 2 scope**. `remaining = capacity − componentWeight`. |
-| `catalogFitment()` badge | `checkPlacement()` → `FitmentResult.severity` | A single wheel-well warning is `warning`; anything else with an error is `error`. |
+| Claude reference                     | Production implementation                      | Notes                                                                                                                                                                        |
+| ------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `issues()` (string reasons + `code`) | `validatePlacement()` → typed `FitmentIssue[]` | Same rules; codes normalized to a typed union; each issue carries an inch `range` for canvas highlighting.                                                                   |
+| `findSpot()`                         | `findOpenPlacement()`                          | Same scan; returns `null` instead of falling back to the partition when nothing fits (the caller decides).                                                                   |
+| drag clamp in `VanCanvas(H)`         | `clampPlacement()` + `snapToIncrement()`       | Extracted to pure helpers; identical `max(partition, min(length−len, round(pos)))`.                                                                                          |
+| `computePayload()`                   | `calculatePayload()`                           | Driver/passenger weight-sum core only. Roof/rear CG bias, infrastructure and accessory weight deltas are **out of Phase 2 scope**. `remaining = capacity − componentWeight`. |
+| `catalogFitment()` badge             | `checkPlacement()` → `FitmentResult.severity`  | A single wheel-well warning is `warning`; anything else with an error is `error`.                                                                                            |
 
 ## Boundary rules
 

@@ -50,10 +50,28 @@ handoff package).
 **Out of scope for Phase 2:** pricing, persistence, quote handoff, Business
 Central, roof/floor/rear planners, infrastructure systems, host adapter.
 
-## Phase 3 — Broaden geometry + packages
+## v0.2.5 — Foundation hardening (current)
 
-- Add remaining vehicles (170"/EWB, Metris) and non-shelf placement modes behind
-  the same engine boundary; build packages / templates.
+- Make install, build, lint, typecheck, JavaScript tests, and PHP tests a
+  repeatable quality gate.
+- Run the gate in GitHub Actions on pushes and pull requests.
+- Enforce configuration structure from the canonical JSON Schema and reject
+  invalid versions, walls, SKUs, coordinates, and duplicate placement IDs.
+- Establish engineering-data provenance metadata without adding commercial
+  vehicle, catalog, or package data.
+- Record the core architecture decisions and normalize repository formatting.
+
+**Out of scope for v0.2.5:** new vehicles, catalog expansion, trade package
+definitions, roof/floor planners, pricing, quotes, Dealer Portal integration,
+and Business Central.
+
+## Phase 3 — Approved data + package workflow
+
+- Introduce approved, provenance-backed vehicle and catalog data.
+- Add compatibility rules and versioned trade-package templates.
+- Preload packages deterministically through the existing fitment engine.
+- Improve build-sheet reporting for package status and unplaced required items.
+- Keep pricing, quote creation, and downstream operations host-owned.
 
 ## Phase 4 — Versioned data
 

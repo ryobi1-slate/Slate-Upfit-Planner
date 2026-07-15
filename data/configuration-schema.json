@@ -29,11 +29,12 @@
       "description": "Selected vehicle and geometry reference.",
       "required": ["id", "name", "wheelbase", "wall"],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "wheelbase": { "type": "string" },
-        "wall": { "type": ["string", "null"] }
-      }
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "wheelbase": { "type": "string", "minLength": 1 },
+        "wall": { "enum": ["driver", "passenger", null] }
+      },
+      "additionalProperties": false
     },
     "placements": {
       "type": "array",
@@ -42,18 +43,22 @@
         "type": "object",
         "required": ["id", "sku", "wall", "position"],
         "properties": {
-          "id": { "type": "string" },
-          "sku": { "type": "string" },
-          "wall": { "type": "string" },
+          "id": { "type": "string", "minLength": 1 },
+          "sku": {
+            "enum": ["22-3436", "22-3437", "22-3438", "22-3439", "22-3440"]
+          },
+          "wall": { "enum": ["driver", "passenger"] },
           "position": {
             "type": "object",
             "required": ["x", "y"],
             "properties": {
-              "x": { "type": "number" },
-              "y": { "type": "number" }
-            }
+              "x": { "type": "number", "minimum": 0 },
+              "y": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": false
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "infrastructure": {
@@ -78,7 +83,9 @@
         "wall_usage": { "type": "object" },
         "payload": { "type": "object" },
         "package_value": { "type": ["number", "null"] }
-      }
+      },
+      "required": ["wall_usage", "payload", "package_value"],
+      "additionalProperties": false
     },
     "dealer_notes": {
       "type": "string",

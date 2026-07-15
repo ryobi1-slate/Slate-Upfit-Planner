@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "configuration_id": null,
+  "vehicle": {
+    "id": "sprinter-144-hr",
+    "name": "Sprinter 144 High Roof",
+    "wheelbase": "144\"",
+    "wall": "driver"
+  },
+  "placements": [
+    {
+      "id": "placement-1",
+      "sku": "22-3438",
+      "wall": "driver",
+      "position": { "x": 12, "y": 0 }
+    }
+  ],
+  "infrastructure": [],
+  "exterior_equipment": [],
+  "validation": [],
+  "totals": {
+    "wall_usage": {},
+    "payload": {},
+    "package_value": null
+  },
+  "dealer_notes": ""
+}
