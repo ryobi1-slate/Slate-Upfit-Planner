@@ -70,6 +70,7 @@ no Redux. State is `useReducer` + React Context.
 - [docs/architecture.md](docs/architecture.md)
 - [docs/host-adapter-contract.md](docs/host-adapter-contract.md)
 - [docs/configuration-schema.md](docs/configuration-schema.md)
+- [docs/phase-3-knowledge-layer.md](docs/phase-3-knowledge-layer.md)
 - [docs/migration-plan.md](docs/migration-plan.md)
 - [docs/ADR](docs/ADR)
 
@@ -82,8 +83,9 @@ no Redux. State is `useReducer` + React Context.
 - **v0.2.5 — hardening:** reproducible quality gates, CI, schema-driven server
   validation, REST/schema fixtures, provenance contract, ADRs, and normalized
   formatting. No planner features or commercial data are added.
-- **Phase 3 — planned:** approved vehicle/catalog data, compatibility rules,
-  trade packages, deterministic package preload, and build-sheet improvements.
+- **Phase 3 — foundation in progress:** versioned knowledge schemas, read-only
+  repositories, integrity validation, and configuration migration. All included
+  records are draft fixtures; no approved commercial data is included.
 
 Phase 2: interactive driver/passenger **wall canvas** and a real, typed
 **fitment engine** over real Sprinter 144 geometry and a fixed Westcan shelf

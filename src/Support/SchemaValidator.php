@@ -20,7 +20,8 @@ final class SchemaValidator
     private ?array $schema = null;
 
     public function __construct(
-        private readonly ?string $schemaPath = null
+        private readonly ?string $schemaPath = null,
+        private readonly ?SchemaRegistry $registry = null
     ) {
     }
 
@@ -30,6 +31,23 @@ final class SchemaValidator
      */
     public function validate(array $payload): array
     {
+        $version = $payload['schema_version'] ?? null;
+        if (! is_string($version)) {
+            return ['$.schema_version is required.'];
+        }
+
+        if ($this->schemaPath === null) {
+            $registry = $this->registry ?? new SchemaRegistry();
+            if (! in_array($version, $registry->versions('configuration'), true)) {
+                return [sprintf('$.schema_version contains unsupported version "%s".', $version)];
+            }
+        }
+
+        if ($this->requestedVersion !== $version) {
+            $this->requestedVersion = $version;
+            $this->schema = null;
+        }
+
         $errors = $this->validateValue($payload, $this->schema(), '$');
 
         if ($errors === []) {
@@ -54,7 +72,9 @@ final class SchemaValidator
             return $this->schema;
         }
 
-        $path = $this->schemaPath ?? dirname(__DIR__, 2) . '/data/configuration-schema.json';
+        $version = $this->requestedVersion;
+        $path = $this->schemaPath
+            ?? ($this->registry ?? new SchemaRegistry())->path('configuration', $version);
         $json = is_readable($path) ? file_get_contents($path) : false;
         if ($json === false) {
             throw new RuntimeException(sprintf('Configuration schema is not readable: %s', $path));
@@ -65,8 +85,44 @@ final class SchemaValidator
             throw new RuntimeException('Configuration schema must decode to an object.');
         }
 
+        $this->assertSupportedSchema($schema, '$schema');
+
         return $this->schema = $schema;
     }
+
+    /**
+     * Fail closed when a configuration contract uses a validation keyword this
+     * focused interpreter does not implement.
+     *
+     * @param array<string, mixed> $schema
+     */
+    private function assertSupportedSchema(array $schema, string $path): void
+    {
+        $supported = [
+            '$schema', '$id', 'title', 'description', 'type', 'const', 'enum',
+            'required', 'properties', 'additionalProperties', 'minLength',
+            'maxLength', 'minimum', 'items',
+        ];
+
+        foreach ($schema as $keyword => $value) {
+            if (! in_array($keyword, $supported, true)) {
+                throw new RuntimeException(sprintf('Unsupported schema keyword at %s: %s', $path, $keyword));
+            }
+
+            if ($keyword === 'properties' && is_array($value)) {
+                foreach ($value as $name => $child) {
+                    if (is_array($child)) {
+                        $this->assertSupportedSchema($child, $path . '.properties.' . $name);
+                    }
+                }
+            }
+            if ($keyword === 'items' && is_array($value)) {
+                $this->assertSupportedSchema($value, $path . '.items');
+            }
+        }
+    }
+
+    private string $requestedVersion = self::SCHEMA_VERSION;
 
     /**
      * JSON Schema subset used by the configuration contract. Keeping this
@@ -107,11 +163,11 @@ final class SchemaValidator
             $errors[] = sprintf('%s must be at least %s.', $path, $schema['minimum']);
         }
 
-        if (($schema['type'] ?? null) === 'object' && is_array($value)) {
+        if ($this->schemaAllowsType($schema, 'object') && is_array($value) && ($value === [] || ! array_is_list($value))) {
             $errors = array_merge($errors, $this->validateObject($value, $schema, $path));
         }
 
-        if (($schema['type'] ?? null) === 'array' && is_array($value) && isset($schema['items']) && is_array($schema['items'])) {
+        if ($this->schemaAllowsType($schema, 'array') && is_array($value) && array_is_list($value) && isset($schema['items']) && is_array($schema['items'])) {
             foreach ($value as $index => $item) {
                 $errors = array_merge(
                     $errors,
@@ -121,6 +177,14 @@ final class SchemaValidator
         }
 
         return $errors;
+    }
+
+    /** @param array<string, mixed> $schema */
+    private function schemaAllowsType(array $schema, string $type): bool
+    {
+        $declared = $schema['type'] ?? null;
+
+        return $declared === $type || (is_array($declared) && in_array($type, $declared, true));
     }
 
     /**

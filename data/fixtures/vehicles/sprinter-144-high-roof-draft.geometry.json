@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "metadata": { "record_revision": "draft-1", "approval_state": "draft", "source": { "title": "Phase 2 candidate data; authoritative source review pending", "reference": null, "retrieved_on": null }, "prepared_by": null, "verified_by": null, "approved_by": null, "last_verified": null, "change_summary": "Draft fixture only; all carried dimensions remain unverified or pending." },
+  "data": {
+    "geometry_id": "mercedes-benz-sprinter-144-high-roof-geometry", "vehicle_id": "mercedes-benz-sprinter-144-high-roof", "geometry_revision": "draft-1",
+    "coordinate_system": { "unit": "in", "origin": "cargo_front", "x_axis": "toward_rear", "y_axis": "from_floor" },
+    "rear_boundary": { "value": 124, "unit": "in", "status": "unverified" },
+    "surfaces": [
+      { "surface_id": "driver_wall", "surface_type": "wall", "length": { "value": 124, "unit": "in", "status": "unverified" }, "height": { "value": null, "unit": "in", "status": "pending" }, "zones": [] },
+      { "surface_id": "passenger_wall", "surface_type": "wall", "length": { "value": 124, "unit": "in", "status": "unverified" }, "height": { "value": null, "unit": "in", "status": "pending" }, "zones": [] }
+    ]
+  }
+}

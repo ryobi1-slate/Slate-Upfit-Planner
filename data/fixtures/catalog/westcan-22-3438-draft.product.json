@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "metadata": { "record_revision": "draft-1", "approval_state": "draft", "source": { "title": "Phase 2 candidate catalog data; source review pending", "reference": null, "retrieved_on": null }, "prepared_by": null, "verified_by": null, "approved_by": null, "last_verified": null, "change_summary": "Draft fixture only; not approved for production use." },
+  "data": {
+    "manufacturer": "Westcan", "sku": "22-3438", "product_name": "Candidate wall-mounted shelf unit", "description": "Draft fixture based on the Phase 2 catalog.", "category": "storage", "subcategory": "shelving",
+    "dimensions": { "length": { "value": 48, "unit": "in", "status": "unverified" }, "depth": { "value": 16.125, "unit": "in", "status": "unverified" }, "height": { "value": 62, "unit": "in", "status": "unverified" } },
+    "published_weight": { "value": null, "unit": "lb", "status": "pending" }, "estimated_install_hours": { "value": null, "unit": "hours", "status": "pending" },
+    "placement_surface": ["driver_wall", "passenger_wall"], "placement_mode": "wall_mounted", "supported_vehicle_rule_ids": ["westcan-22-3438-draft"], "supported_roof_rules": [], "required_clearances": [], "required_accessories": [], "excluded_products": [], "required_products": [],
+    "quantity_limits": { "minimum": 0, "maximum": null }, "product_family": "wall-mounted-shelving", "lifecycle_status": "draft", "data_revision": "draft-1"
+  }
+}

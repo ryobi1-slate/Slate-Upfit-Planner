@@ -70,12 +70,14 @@ function wp_verify_nonce(string $nonce, string $action): bool
 $root = dirname(__DIR__, 2);
 require_once $root . '/src/Integration/HostAdapterInterface.php';
 require_once $root . '/src/Integration/NullHostAdapter.php';
+require_once $root . '/src/Support/SchemaRegistry.php';
 require_once $root . '/src/Support/SchemaValidator.php';
 require_once $root . '/src/Persistence/ConfigurationRepository.php';
 require_once $root . '/src/Rest/RestController.php';
 
 use Slate\UpfitPlanner\Integration\NullHostAdapter;
 use Slate\UpfitPlanner\Rest\RestController;
+use Slate\UpfitPlanner\Support\SchemaRegistry;
 use Slate\UpfitPlanner\Support\SchemaValidator;
 
 /** @var array<string, mixed> $fixture */
@@ -93,14 +95,60 @@ $tests['accepts canonical fixture'] = static fn (): bool => $validator->validate
 
 $tests['provenance schema requires review metadata'] = static function () use ($root): bool {
     $schema = json_decode(
-        (string) file_get_contents($root . '/data/engineering-data-schema.json'),
+        (string) file_get_contents($root . '/data/schemas/engineering-data-envelope-1.0.schema.json'),
         true,
         512,
         JSON_THROW_ON_ERROR
     );
     $required = $schema['$defs']['provenance']['required'] ?? [];
 
-    return $required === ['revision', 'source', 'approved_by', 'last_verified'];
+    return $required === ['record_revision', 'approval_state', 'source', 'prepared_by', 'verified_by', 'approved_by', 'last_verified', 'change_summary'];
+};
+
+$tests['registry exposes configuration 1.0 and 1.1'] = static function (): bool {
+    return (new SchemaRegistry())->versions('configuration') === ['1.0', '1.1'];
+};
+
+$tests['configuration 1.1 fixture validates'] = static function () use ($root, $validator): bool {
+    $version11 = json_decode(
+        (string) file_get_contents($root . '/data/fixtures/migrations/configuration-1.1-minimal.json'),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+
+    return $validator->validate($version11) === [];
+};
+
+$tests['unsupported configuration schema version fails'] = static function () use ($validator, $fixture): bool {
+    $fixture['schema_version'] = '9.0';
+    $errors = $validator->validate($fixture);
+
+    return $errors !== [] && str_contains($errors[0], 'unsupported version');
+};
+
+$tests['focused validator rejects unsupported schema keywords'] = static function () use ($root, $fixture): bool {
+    $temporary = tempnam(sys_get_temp_dir(), 'slate-schema-');
+    if ($temporary === false) {
+        return false;
+    }
+    $schema = json_decode(
+        (string) file_get_contents($root . '/data/schemas/configuration-1.0.schema.json'),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+    $schema['unevaluatedProperties'] = false;
+    file_put_contents($temporary, json_encode($schema, JSON_THROW_ON_ERROR));
+    try {
+        (new SchemaValidator($temporary))->validate($fixture);
+    } catch (RuntimeException $error) {
+        return str_contains($error->getMessage(), 'Unsupported schema keyword');
+    } finally {
+        unlink($temporary);
+    }
+
+    return false;
 };
 
 $tests['rejects invalid version'] = static function () use ($validator, $fixture): bool {

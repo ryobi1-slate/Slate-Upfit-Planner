@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slatebuilt.com/schemas/geometry-1.0.schema.json",
+  "title": "Vehicle Geometry 1.0",
+  "allOf": [{ "$ref": "engineering-data-envelope-1.0.schema.json" }],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "data": {
+      "type": "object",
+      "required": ["geometry_id", "vehicle_id", "geometry_revision", "coordinate_system", "rear_boundary", "surfaces"],
+      "properties": {
+        "geometry_id": { "type": "string", "minLength": 1 },
+        "vehicle_id": { "type": "string", "minLength": 1 },
+        "geometry_revision": { "type": "string", "minLength": 1 },
+        "coordinate_system": { "type": "object", "required": ["unit", "origin", "x_axis", "y_axis"], "properties": { "unit": { "const": "in" }, "origin": { "const": "cargo_front" }, "x_axis": { "const": "toward_rear" }, "y_axis": { "const": "from_floor" } }, "additionalProperties": false },
+        "rear_boundary": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "surfaces": { "type": "array", "items": { "$ref": "#/$defs/surface" }, "minItems": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "surface": {
+      "type": "object",
+      "required": ["surface_id", "surface_type", "length", "height", "zones"],
+      "properties": {
+        "surface_id": { "enum": ["driver_wall", "passenger_wall"] },
+        "surface_type": { "const": "wall" },
+        "length": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "height": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "zones": { "type": "array", "items": { "$ref": "#/$defs/zone" } }
+      },
+      "additionalProperties": false
+    },
+    "zone": {
+      "type": "object",
+      "required": ["zone_id", "zone_type", "behavior", "from", "to", "height", "depth", "status", "reason"],
+      "properties": {
+        "zone_id": { "type": "string", "minLength": 1 },
+        "zone_type": { "enum": ["partition", "wheel_well", "door_opening", "no_mount"] },
+        "behavior": { "enum": ["no_mount", "conditional_mount", "advisory"] },
+        "from": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "to": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "height": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "depth": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "status": { "enum": ["verified", "unverified", "pending"] },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}
