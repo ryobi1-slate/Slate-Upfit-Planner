@@ -35,11 +35,11 @@ PHP host adapter.
 
 ## Communication paths
 
-| Path | Mechanism |
-| --- | --- |
-| Browser → WordPress | REST (`slate-upfit-planner/v1/*`) |
-| WordPress (planner) → Host plugin | PHP `HostAdapterInterface` |
-| Browser → Host / Business Central | **not allowed** |
+| Path                              | Mechanism                         |
+| --------------------------------- | --------------------------------- |
+| Browser → WordPress               | REST (`slate-upfit-planner/v1/*`) |
+| WordPress (planner) → Host plugin | PHP `HostAdapterInterface`        |
+| Browser → Host / Business Central | **not allowed**                   |
 
 ```
 ┌─────────────┐   REST    ┌────────────────────┐   PHP adapter   ┌──────────────┐
@@ -124,3 +124,17 @@ without the Dealer Portal.
 ## Migration phases
 
 See [migration-plan.md](./migration-plan.md).
+
+## v0.2.5 hardening boundary
+
+The hardening release adds no planner features. It makes the existing Phase 2
+foundation enforceable through CI, schema-driven PHP validation, lightweight
+REST/schema tests, consistent formatting, and architecture decisions.
+
+`data/configuration-schema.json` is the structural source of truth. PHP loads
+and interprets that schema; code adds only domain invariants not represented by
+the schema, currently unique placement IDs. Future vehicle, catalog, and
+package JSON files must use the provenance metadata contract in
+`data/engineering-data-schema.json`.
+
+Architecture decisions are recorded under [`docs/ADR`](./ADR/).

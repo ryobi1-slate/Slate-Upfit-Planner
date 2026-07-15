@@ -4,141 +4,36 @@ declare(strict_types=1);
 
 namespace Slate\UpfitPlanner\Support;
 
+use RuntimeException;
+
 /**
- * Validates a normalized configuration payload against the versioned schema
- * before it is saved or handed to the host's quote system.
+ * Validates normalized configuration payloads from the canonical JSON Schema.
  *
- * This is a lightweight structural validator (no external JSON-Schema library
- * dependency in Phase 1). The canonical schema lives in
- * `data/configuration-schema.json`. Both must be kept in sync.
+ * Domain invariants that JSON Schema cannot express without custom extensions
+ * (currently placement-id uniqueness) are checked after structural validation.
  */
 final class SchemaValidator
 {
     public const SCHEMA_VERSION = '1.0';
 
-    /**
-     * Top-level keys required on every normalized payload.
-     *
-     * @var string[]
-     */
-    private const REQUIRED_KEYS = [
-        'schema_version',
-        'configuration_id',
-        'vehicle',
-        'placements',
-        'infrastructure',
-        'exterior_equipment',
-        'validation',
-        'totals',
-        'dealer_notes',
-    ];
+    /** @var array<string, mixed>|null */
+    private ?array $schema = null;
 
-    /**
-     * Validate a payload structurally.
-     *
-     * @param array<string, mixed> $payload
-     * @return string[] List of human-readable error messages. Empty === valid.
-     */
-    public function validate(array $payload): array
-    {
-        $errors = [];
-
-        foreach (self::REQUIRED_KEYS as $key) {
-            if (! array_key_exists($key, $payload)) {
-                $errors[] = sprintf('Missing required key: %s', $key);
-            }
-        }
-
-        if (($payload['schema_version'] ?? null) !== self::SCHEMA_VERSION) {
-            $errors[] = sprintf(
-                'Unsupported schema_version. Expected "%s".',
-                self::SCHEMA_VERSION
-            );
-        }
-
-        // configuration_id may be null (unsaved) or a string.
-        if (array_key_exists('configuration_id', $payload)) {
-            $id = $payload['configuration_id'];
-            if ($id !== null && ! is_string($id)) {
-                $errors[] = 'configuration_id must be a string or null.';
-            }
-        }
-
-        // Use array_key_exists (not isset) so an explicit null value is still
-        // type-checked and flagged rather than silently skipped.
-        if (array_key_exists('vehicle', $payload) && ! is_array($payload['vehicle'])) {
-            $errors[] = 'vehicle must be an object.';
-        }
-
-        foreach (['placements', 'infrastructure', 'exterior_equipment', 'validation'] as $listKey) {
-            if (array_key_exists($listKey, $payload) && ! is_array($payload[$listKey])) {
-                $errors[] = sprintf('%s must be an array.', $listKey);
-            }
-        }
-
-        // Each placement must match the canonical schema (id, sku, wall, and a
-        // numeric position.x/position.y) so malformed items such as `[{}]` are
-        // rejected before persistence or quote handoff.
-        if (array_key_exists('placements', $payload) && is_array($payload['placements'])) {
-            $index = 0;
-            foreach ($payload['placements'] as $placement) {
-                foreach ($this->validatePlacement($placement, $index) as $error) {
-                    $errors[] = $error;
-                }
-                $index++;
-            }
-        }
-
-        if (array_key_exists('totals', $payload) && ! is_array($payload['totals'])) {
-            $errors[] = 'totals must be an object.';
-        }
-
-        if (array_key_exists('dealer_notes', $payload) && ! is_string($payload['dealer_notes'])) {
-            $errors[] = 'dealer_notes must be a string.';
-        }
-
-        return $errors;
+    public function __construct(
+        private readonly ?string $schemaPath = null
+    ) {
     }
 
     /**
-     * Validate a single placement item's structure and types, mirroring the
-     * `placements.items` definition in data/configuration-schema.json.
-     *
-     * @param mixed $placement Raw placement item (expected associative array).
-     * @param int   $index     Position in the placements array, for messaging.
-     * @return string[] Errors for this item. Empty === valid.
+     * @param array<string, mixed> $payload
+     * @return string[]
      */
-    private function validatePlacement(mixed $placement, int $index): array
+    public function validate(array $payload): array
     {
-        $errors = [];
-        $label = sprintf('placements[%d]', $index);
+        $errors = $this->validateValue($payload, $this->schema(), '$');
 
-        if (! is_array($placement)) {
-            $errors[] = sprintf('%s must be an object.', $label);
-
-            return $errors;
-        }
-
-        foreach (['id', 'sku', 'wall'] as $key) {
-            if (! array_key_exists($key, $placement)) {
-                $errors[] = sprintf('%s.%s is required.', $label, $key);
-            } elseif (! is_string($placement[$key])) {
-                $errors[] = sprintf('%s.%s must be a string.', $label, $key);
-            }
-        }
-
-        if (! array_key_exists('position', $placement)) {
-            $errors[] = sprintf('%s.position is required.', $label);
-        } elseif (! is_array($placement['position'])) {
-            $errors[] = sprintf('%s.position must be an object.', $label);
-        } else {
-            foreach (['x', 'y'] as $axis) {
-                if (! array_key_exists($axis, $placement['position'])) {
-                    $errors[] = sprintf('%s.position.%s is required.', $label, $axis);
-                } elseif (! is_int($placement['position'][$axis]) && ! is_float($placement['position'][$axis])) {
-                    $errors[] = sprintf('%s.position.%s must be a number.', $label, $axis);
-                }
-            }
+        if ($errors === []) {
+            $errors = array_merge($errors, $this->validateUniquePlacementIds($payload));
         }
 
         return $errors;
@@ -150,5 +45,159 @@ final class SchemaValidator
     public function isValid(array $payload): bool
     {
         return $this->validate($payload) === [];
+    }
+
+    /** @return array<string, mixed> */
+    private function schema(): array
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        $path = $this->schemaPath ?? dirname(__DIR__, 2) . '/data/configuration-schema.json';
+        $json = is_readable($path) ? file_get_contents($path) : false;
+        if ($json === false) {
+            throw new RuntimeException(sprintf('Configuration schema is not readable: %s', $path));
+        }
+
+        $schema = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        if (! is_array($schema)) {
+            throw new RuntimeException('Configuration schema must decode to an object.');
+        }
+
+        return $this->schema = $schema;
+    }
+
+    /**
+     * JSON Schema subset used by the configuration contract. Keeping this
+     * interpreter generic means constraints remain declared in the JSON file.
+     *
+     * @param array<string, mixed> $schema
+     * @return string[]
+     */
+    private function validateValue(mixed $value, array $schema, string $path): array
+    {
+        $errors = [];
+
+        if (array_key_exists('const', $schema) && $value !== $schema['const']) {
+            $errors[] = sprintf('%s must equal %s.', $path, json_encode($schema['const']));
+        }
+
+        if (isset($schema['enum']) && is_array($schema['enum']) && ! in_array($value, $schema['enum'], true)) {
+            $errors[] = sprintf('%s contains an unsupported value.', $path);
+        }
+
+        if (array_key_exists('type', $schema) && ! $this->matchesType($value, $schema['type'])) {
+            $errors[] = sprintf('%s has an invalid type.', $path);
+
+            return $errors;
+        }
+
+        if (is_string($value)) {
+            if (isset($schema['minLength']) && strlen($value) < (int) $schema['minLength']) {
+                $errors[] = sprintf('%s is shorter than the minimum length.', $path);
+            }
+            if (isset($schema['maxLength']) && strlen($value) > (int) $schema['maxLength']) {
+                $errors[] = sprintf('%s exceeds the maximum length.', $path);
+            }
+        }
+
+        if ((is_int($value) || is_float($value)) && isset($schema['minimum']) && $value < $schema['minimum']) {
+            $errors[] = sprintf('%s must be at least %s.', $path, $schema['minimum']);
+        }
+
+        if (($schema['type'] ?? null) === 'object' && is_array($value)) {
+            $errors = array_merge($errors, $this->validateObject($value, $schema, $path));
+        }
+
+        if (($schema['type'] ?? null) === 'array' && is_array($value) && isset($schema['items']) && is_array($schema['items'])) {
+            foreach ($value as $index => $item) {
+                $errors = array_merge(
+                    $errors,
+                    $this->validateValue($item, $schema['items'], sprintf('%s[%d]', $path, $index))
+                );
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     * @param array<string, mixed> $schema
+     * @return string[]
+     */
+    private function validateObject(array $value, array $schema, string $path): array
+    {
+        $errors = [];
+        $properties = isset($schema['properties']) && is_array($schema['properties'])
+            ? $schema['properties']
+            : [];
+
+        foreach (($schema['required'] ?? []) as $required) {
+            if (is_string($required) && ! array_key_exists($required, $value)) {
+                $errors[] = sprintf('%s.%s is required.', $path, $required);
+            }
+        }
+
+        foreach ($value as $key => $item) {
+            if (! is_string($key)) {
+                continue;
+            }
+            if (isset($properties[$key]) && is_array($properties[$key])) {
+                $errors = array_merge(
+                    $errors,
+                    $this->validateValue($item, $properties[$key], $path . '.' . $key)
+                );
+            } elseif (($schema['additionalProperties'] ?? true) === false) {
+                $errors[] = sprintf('%s.%s is not allowed.', $path, $key);
+            }
+        }
+
+        return $errors;
+    }
+
+    private function matchesType(mixed $value, mixed $expected): bool
+    {
+        $types = is_array($expected) ? $expected : [$expected];
+
+        foreach ($types as $type) {
+            $matches = match ($type) {
+                'null' => $value === null,
+                'string' => is_string($value),
+                'number' => (is_int($value) || is_float($value)) && is_finite((float) $value),
+                'integer' => is_int($value),
+                'boolean' => is_bool($value),
+                'array' => is_array($value) && array_is_list($value),
+                'object' => is_array($value) && ($value === [] || ! array_is_list($value)),
+                default => false,
+            };
+
+            if ($matches) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return string[]
+     */
+    private function validateUniquePlacementIds(array $payload): array
+    {
+        $seen = [];
+        $errors = [];
+
+        foreach ($payload['placements'] as $index => $placement) {
+            $id = $placement['id'];
+            if (isset($seen[$id])) {
+                $errors[] = sprintf('$.placements[%d].id duplicates placement id "%s".', $index, $id);
+            }
+            $seen[$id] = true;
+        }
+
+        return $errors;
     }
 }

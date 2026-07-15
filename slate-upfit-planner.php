@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Slate Upfit Planner
  * Description: Standalone commercial van fitment planner, canvas, and build-sheet engine. Owns the planner UI, geometry, fitment, packages, build sheet, saved configurations, and schema. Integrates with a host (Dealer Portal) for identity, pricing, and quote handoff via a PHP host adapter.
- * Version: 0.1.0
+ * Version: 0.2.5
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Author: Slate
@@ -15,7 +15,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('SLATE_UPFIT_PLANNER_VERSION', '0.1.0');
+define('SLATE_UPFIT_PLANNER_VERSION', '0.2.5');
 define('SLATE_UPFIT_PLANNER_FILE', __FILE__);
 define('SLATE_UPFIT_PLANNER_DIR', plugin_dir_path(__FILE__));
 define('SLATE_UPFIT_PLANNER_URL', plugin_dir_url(__FILE__));

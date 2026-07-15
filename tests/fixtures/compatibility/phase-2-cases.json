@@ -1,0 +1,26 @@
+[
+  {
+    "description": "known shelf on driver wall",
+    "sku": "22-3438",
+    "wall": "driver",
+    "valid": true
+  },
+  {
+    "description": "known shelf on passenger wall",
+    "sku": "22-3438",
+    "wall": "passenger",
+    "valid": true
+  },
+  {
+    "description": "unknown shelf is rejected",
+    "sku": "UNKNOWN-SKU",
+    "wall": "driver",
+    "valid": false
+  },
+  {
+    "description": "unsupported wall is rejected",
+    "sku": "22-3438",
+    "wall": "rear",
+    "valid": false
+  }
+]

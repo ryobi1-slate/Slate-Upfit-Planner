@@ -15,15 +15,15 @@ All values are **inches** (canonical), except `payloadCapacity` which is
 
 ## Zone letters used
 
-| Letter | Meaning | 144" value |
-| --- | --- | --- |
-| B | Interior width | 61.125" → **61"** |
-| H | Partition zone (front reserve) | 7.5" → **8"** |
-| I | Available cargo (partition→rear) | ~116.4" (HR) / ~117.1" (STD) |
-| K | Partition → wheel well | ~63.1" (HR) / ~63.6" (STD) |
-| E | Wheel-well length | **36.5"** |
-| G | Sliding-door opening | 51.75" → **52"** |
-| L | Contoured partition inset (passenger) | 12.125" → **12"**, 5" stay-clear |
+| Letter | Meaning                               | 144" value                       |
+| ------ | ------------------------------------- | -------------------------------- |
+| B      | Interior width                        | 61.125" → **61"**                |
+| H      | Partition zone (front reserve)        | 7.5" → **8"**                    |
+| I      | Available cargo (partition→rear)      | ~116.4" (HR) / ~117.1" (STD)     |
+| K      | Partition → wheel well                | ~63.1" (HR) / ~63.6" (STD)       |
+| E      | Wheel-well length                     | **36.5"**                        |
+| G      | Sliding-door opening                  | 51.75" → **52"**                 |
+| L      | Contoured partition inset (passenger) | 12.125" → **12"**, 5" stay-clear |
 
 Cargo length = round(H + I) → **124"** (High Roof) / **125"** (Standard Roof).
 Wheel-well intrusion depth = (width − wheelhouseWidth)/2 for the 2500 (wheelhouse
@@ -43,10 +43,10 @@ wall is effectively mountable from ~60" to the rear.
 
 ## Vehicles
 
-| id | Roof | Length | Width | Payload |
-| --- | --- | --- | --- | --- |
-| `sprinter-144-hr` | high | 124" | 61" | 4211 lb |
-| `sprinter-144-std` | standard | 125" | 61" | 4211 lb |
+| id                 | Roof     | Length | Width | Payload |
+| ------------------ | -------- | ------ | ----- | ------- |
+| `sprinter-144-hr`  | high     | 124"   | 61"   | 4211 lb |
+| `sprinter-144-std` | standard | 125"   | 61"   | 4211 lb |
 
 The High Roof is the default demo vehicle. Both share identical wall geometry;
 they differ only in roof height, which gates component compatibility (the 62"H
@@ -60,13 +60,13 @@ shelves (62" H, 3-tier), 24 / 36 / 48 / 60 / 72". Depth 16.125". Weight from the
 reference model `round(length·1.7 + 3·14)`. **Pricing is intentionally omitted**
 in Phase 2 (host-owned).
 
-| SKU | Length | Weight |
-| --- | --- | --- |
-| 22-3436 | 24" | 83 lb |
-| 22-3437 | 36" | 103 lb |
-| 22-3438 | 48" | 124 lb |
-| 22-3439 | 60" | 144 lb |
-| 22-3440 | 72" | 164 lb |
+| SKU     | Length | Weight |
+| ------- | ------ | ------ |
+| 22-3436 | 24"    | 83 lb  |
+| 22-3437 | 36"    | 103 lb |
+| 22-3438 | 48"    | 124 lb |
+| 22-3439 | 60"    | 144 lb |
+| 22-3440 | 72"    | 164 lb |
 
 ## Adding geometry later
 

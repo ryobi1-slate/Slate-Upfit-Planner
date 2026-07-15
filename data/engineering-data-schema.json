@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slatebuilt.com/schemas/upfit-planner-engineering-data-1.0.json",
+  "title": "Slate Upfit Planner Engineering Data Envelope",
+  "description": "Shared provenance contract for future vehicle, catalog, and package JSON data. This sprint defines metadata only and adds no commercial data.",
+  "type": "object",
+  "required": ["metadata", "data"],
+  "properties": {
+    "metadata": {
+      "$ref": "#/$defs/provenance"
+    },
+    "data": {
+      "description": "Domain data validated by a vehicle, catalog, or package-specific schema."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "required": ["revision", "source", "approved_by", "last_verified"],
+      "properties": {
+        "revision": { "type": "string" },
+        "source": { "type": "string" },
+        "approved_by": { "type": "string" },
+        "last_verified": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -142,7 +142,8 @@ export function WallCanvasSvg( {
 					className="sup-remain-label"
 				>
 					{ wall.label.toUpperCase() } REMAIN{ ' ' }
-					{ Math.max( 0, Math.round( remaining ) ) }&quot;
+					{ Math.max( 0, Math.round( remaining ) ) }
+					&quot;
 				</text>
 			</g>
 		</g>

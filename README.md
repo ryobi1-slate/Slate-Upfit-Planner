@@ -34,7 +34,7 @@ Add the planner to any page with the shortcode:
 ```
 
 With no host adapter registered, the planner runs in **standalone / demo** mode
-against placeholder data.
+against the fixed Phase 2 Sprinter 144 geometry and shelf fixtures.
 
 ## Development
 
@@ -48,6 +48,20 @@ npm run lint          # wp-scripts lint-js
 npm test              # engine smoke tests
 ```
 
+The supported quality gate is:
+
+```bash
+npm install
+npm run build
+npm run lint
+npm run typecheck
+npm test
+git diff --check
+```
+
+GitHub Actions runs the build, lint, typecheck, JavaScript/PHP tests, PHP syntax,
+and whitespace checks on every push and pull request.
+
 Build system: React + TypeScript + `@wordpress/scripts` (webpack). No Next.js,
 no Redux. State is `useReducer` + React Context.
 
@@ -57,8 +71,19 @@ no Redux. State is `useReducer` + React Context.
 - [docs/host-adapter-contract.md](docs/host-adapter-contract.md)
 - [docs/configuration-schema.md](docs/configuration-schema.md)
 - [docs/migration-plan.md](docs/migration-plan.md)
+- [docs/ADR](docs/ADR)
 
 ## Development status
+
+- **Phase 1 — complete:** standalone plugin, React/TypeScript shell, REST and
+  host-adapter boundaries, reducer state, and schema 1.0.
+- **Phase 2 — complete:** interactive driver/passenger canvas, Sprinter 144
+  geometry, pure fitment engine, normalized payloads, and engine tests.
+- **v0.2.5 — hardening:** reproducible quality gates, CI, schema-driven server
+  validation, REST/schema fixtures, provenance contract, ADRs, and normalized
+  formatting. No planner features or commercial data are added.
+- **Phase 3 — planned:** approved vehicle/catalog data, compatibility rules,
+  trade packages, deterministic package preload, and build-sheet improvements.
 
 Phase 2: interactive driver/passenger **wall canvas** and a real, typed
 **fitment engine** over real Sprinter 144 geometry and a fixed Westcan shelf
@@ -66,4 +91,5 @@ catalog — select, preview, place, drag (1" snap), validate, and remove, with
 build-sheet totals and payload. Pricing, quotes, persistence, host adapter,
 Business Central, and roof/floor/rear planners are migrated in later phases (see
 [docs/migration-plan.md](docs/migration-plan.md), [docs/fitment-engine.md](docs/fitment-engine.md),
-and [docs/geometry-data.md](docs/geometry-data.md)).
+and [docs/geometry-data.md](docs/geometry-data.md)). Pricing, persistence,
+quotes, Dealer Portal integration, and Business Central remain outside v0.2.5.

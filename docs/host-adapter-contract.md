@@ -9,14 +9,14 @@ Business Central). The planner never reaches those systems directly.
 
 `Slate\UpfitPlanner\Integration\HostAdapterInterface`
 
-| Method | Purpose | Owned by |
-| --- | --- | --- |
-| `getCurrentUser(): array` | Authenticated user identity | Host |
-| `getCurrentDealer(): array` | Dealer identity/approval/tier | Host |
-| `getCatalogContext(): array` | Available SKUs/packages for this dealer | Host |
-| `getPricingContext(): array` | Currency, price list, visibility | Host |
-| `saveConfiguration(array $payload): array` | Persist a normalized payload | Host |
-| `addConfigurationToQuote(array $payload): array` | Hand payload to quote system | Host |
+| Method                                           | Purpose                                 | Owned by |
+| ------------------------------------------------ | --------------------------------------- | -------- |
+| `getCurrentUser(): array`                        | Authenticated user identity             | Host     |
+| `getCurrentDealer(): array`                      | Dealer identity/approval/tier           | Host     |
+| `getCatalogContext(): array`                     | Available SKUs/packages for this dealer | Host     |
+| `getPricingContext(): array`                     | Currency, price list, visibility        | Host     |
+| `saveConfiguration(array $payload): array`       | Persist a normalized payload            | Host     |
+| `addConfigurationToQuote(array $payload): array` | Hand payload to quote system            | Host     |
 
 All methods take/return plain associative arrays so the contract stays free of
 host-specific types. `saveConfiguration` and `addConfigurationToQuote` receive a
