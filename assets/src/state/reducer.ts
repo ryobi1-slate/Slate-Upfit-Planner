@@ -29,6 +29,14 @@ function maxPlacementSeq( placements: Placement[], floor: number ): number {
 	}, floor );
 }
 
+/**
+ * True for a wall id that has geometry in Phase 2.
+ * @param wall
+ */
+function isValidWall( wall: unknown ): wall is WallId {
+	return wall === 'driver' || wall === 'passenger';
+}
+
 export interface PlannerState {
 	vehicle: VehicleGeometry;
 	activeWall: WallId;
@@ -143,11 +151,17 @@ export function plannerReducer(
 				selectedPlacementId: null,
 			};
 
-		case 'LOAD_CONFIGURATION':
+		case 'LOAD_CONFIGURATION': {
+			// Sanitize the restored wall: a legacy/unknown id (e.g. a Phase 1
+			// 'rear'/'floor'/'ceiling') would resolve to no geometry and blank
+			// the canvas, so fall back to the current wall.
+			const loadedWall = action.payload.vehicle.wall;
 			return {
 				...state,
 				configurationId: action.payload.configuration_id,
-				activeWall: action.payload.vehicle.wall ?? state.activeWall,
+				activeWall: isValidWall( loadedWall )
+					? loadedWall
+					: state.activeWall,
 				placements: action.placements,
 				dealerNotes: action.payload.dealer_notes,
 				preview: null,
@@ -157,6 +171,7 @@ export function plannerReducer(
 					state.placementSeq
 				),
 			};
+		}
 
 		case 'SET_DEALER_NOTES':
 			return { ...state, dealerNotes: action.notes };

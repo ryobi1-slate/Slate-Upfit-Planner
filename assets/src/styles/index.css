@@ -291,6 +291,14 @@
 	min-width: 640px;
 	font-family: 'Inter', system-ui, sans-serif;
 	user-select: none;
+	/* Prevent the browser's touch-scroll/zoom from hijacking drag on touch devices. */
+	touch-action: none;
+}
+
+/* While a product is armed, let pointer events pass through placed blocks to the
+   capture layer so the ghost preview tracks smoothly and clicks place anywhere. */
+.sup-wall-canvas--armed .sup-placement {
+	pointer-events: none;
 }
 
 .sup-lane-shell {

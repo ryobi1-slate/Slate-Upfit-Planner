@@ -154,7 +154,10 @@ export function WallCanvas() {
 	return (
 		<svg
 			ref={ svgRef }
-			className="sup-wall-canvas"
+			className={
+				'sup-wall-canvas' +
+				( selectedSku ? ' sup-wall-canvas--armed' : '' )
+			}
 			width="100%"
 			viewBox={ `0 0 ${ scale.svgW } ${ scale.svgH }` }
 			role="group"

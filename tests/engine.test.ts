@@ -262,6 +262,27 @@ describe('reducer load configuration', () => {
 		expect(new Set(ids).size).toBe(ids.length);
 		expect(ids).toContain('placement-6');
 	});
+
+	it('sanitizes a legacy/unknown restored wall to a valid one', () => {
+		const state = initPlannerState({
+			vehicle,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+			activeWall: 'passenger',
+		});
+		const payload = buildNormalizedPayload({
+			configurationId: 'cfg-legacy',
+			vehicle,
+			activeWall: 'driver',
+			placements: [],
+			componentsBySku: COMPONENTS_BY_SKU,
+		});
+		// Simulate a Phase 1 payload carrying a wall id no longer valid.
+		(payload.vehicle as { wall: string }).wall = 'rear';
+		const next = plannerReducer(state, loadConfiguration(payload, []));
+		// Falls back to the current wall instead of an unrenderable 'rear'.
+		expect(next.activeWall).toBe('passenger');
+	});
 });
 
 describe('interaction flow (engine + reducer, mirrors the UI hook)', () => {
