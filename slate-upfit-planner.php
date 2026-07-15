@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Slate Upfit Planner
- * Description: Commercial van fitment planner and build-sheet engine for Slate dealer and internal workflows.
+ * Description: Standalone commercial van fitment planner, canvas, and build-sheet engine. Owns the planner UI, geometry, fitment, packages, build sheet, saved configurations, and schema. Integrates with a host (Dealer Portal) for identity, pricing, and quote handoff via a PHP host adapter.
  * Version: 0.1.0
  * Requires at least: 6.5
  * Requires PHP: 8.1
@@ -20,13 +20,26 @@ define('SLATE_UPFIT_PLANNER_FILE', __FILE__);
 define('SLATE_UPFIT_PLANNER_DIR', plugin_dir_path(__FILE__));
 define('SLATE_UPFIT_PLANNER_URL', plugin_dir_url(__FILE__));
 
-$autoload = SLATE_UPFIT_PLANNER_DIR . 'vendor/autoload.php';
+$slate_upfit_planner_autoload = SLATE_UPFIT_PLANNER_DIR . 'vendor/autoload.php';
 
-if (is_readable($autoload)) {
-    require_once $autoload;
+if (is_readable($slate_upfit_planner_autoload)) {
+    require_once $slate_upfit_planner_autoload;
 } else {
-    require_once SLATE_UPFIT_PLANNER_DIR . 'src/Integration/HostAdapterInterface.php';
-    require_once SLATE_UPFIT_PLANNER_DIR . 'src/Plugin.php';
+    // Lightweight PSR-4 fallback so the plugin runs before `composer install`.
+    spl_autoload_register(static function (string $class): void {
+        $prefix = 'Slate\\UpfitPlanner\\';
+
+        if (! str_starts_with($class, $prefix)) {
+            return;
+        }
+
+        $relative = substr($class, strlen($prefix));
+        $path = SLATE_UPFIT_PLANNER_DIR . 'src/' . str_replace('\\', '/', $relative) . '.php';
+
+        if (is_readable($path)) {
+            require_once $path;
+        }
+    });
 }
 
 add_action('plugins_loaded', static function (): void {

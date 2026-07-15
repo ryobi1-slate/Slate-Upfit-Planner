@@ -1,52 +1,112 @@
 # Architecture
 
-## Product boundary
+## Overview
 
-Slate Upfit Planner is an independently versioned WordPress plugin. It owns planner presentation, vehicle geometry, fitment, product selection, build packages, build-sheet generation, and planner persistence.
+Slate Upfit Planner is a standalone, independently versioned WordPress plugin.
+It is the successor to the planner embedded in the Dealer Portal, which is now
+frozen as the **legacy fallback**.
 
-The Dealer Portal remains the host for dealer identity, approval, pricing context, and WooCommerce/B2BKing quote creation.
+## Ownership boundary
 
-## Host contract
+**Slate Upfit Planner owns:**
 
-The host supplies an implementation of `HostAdapterInterface` through:
+- React planner UI and product shell
+- Canvas / workspace
+- Vehicle geometry
+- Fitment engine and rules
+- Build packages and templates
+- Build sheet
+- Saved planner configurations
+- The normalized configuration schema
 
-```php
-add_filter('slate_upfit_planner_host_adapter', function () {
-    return new DealerPortalPlannerAdapter();
-});
+**Dealer Portal (host) owns:**
+
+- Authentication
+- Dealer identity and approval
+- Pricing
+- Quotes
+- B2BKing
+- Business Central handoff
+- Ops handoff
+
+The planner **never** calls Business Central, B2BKing, WooCommerce, or the
+dealer identity system directly. Everything host-owned is reached through the
+PHP host adapter.
+
+## Communication paths
+
+| Path | Mechanism |
+| --- | --- |
+| Browser → WordPress | REST (`slate-upfit-planner/v1/*`) |
+| WordPress (planner) → Host plugin | PHP `HostAdapterInterface` |
+| Browser → Host / Business Central | **not allowed** |
+
+```
+┌─────────────┐   REST    ┌────────────────────┐   PHP adapter   ┌──────────────┐
+│  React app  │ ────────▶ │  Slate Upfit       │ ──────────────▶ │ Dealer Portal │
+│ (browser)   │           │  Planner (WP PHP)  │                 │ (host)        │
+└─────────────┘           └────────────────────┘                 └──────────────┘
+                                   │                                     │
+                                   ▼                                     ▼
+                          Fitment / build sheet                Pricing / quotes /
+                          (owned here)                          Business Central
 ```
 
-The adapter provides:
+## PHP structure
 
-- Current dealer context
-- Pricing context
-- Add-configuration-to-quote service
-
-## Planner payload
-
-All host integrations consume a versioned normalized payload:
-
-```json
-{
-  "schemaVersion": "1.0",
-  "configurationId": "",
-  "vehicle": {},
-  "components": [],
-  "infrastructure": [],
-  "exteriorEquipment": [],
-  "validation": [],
-  "totals": {},
-  "dealerNotes": ""
-}
 ```
+slate-upfit-planner.php        Plugin bootstrap + PSR-4 fallback autoloader
+src/
+  Plugin.php                   Boot, adapter resolution, assets, shortcode
+  Integration/
+    HostAdapterInterface.php   Host contract (6 methods)
+    NullHostAdapter.php        Standalone/demo implementation
+  Rest/
+    RestController.php         Browser-facing REST endpoints
+  Persistence/
+    ConfigurationRepository.php Save boundary (schema-validated)
+  Support/
+    SchemaValidator.php        Structural payload validation
+templates/
+  planner-mount.php            Shortcode mount markup
+data/
+  configuration-schema.json    Canonical JSON schema (v1.0)
+```
+
+## Front-end structure
+
+```
+assets/src/
+  main.tsx                     Browser entry (mounts React app)
+  app/App.tsx                  Product shell composition
+  components/                  TopNav, ConfigurationRail, CanvasWorkspace, BuildSheetRail
+  engine/                      Pure fitment engine (no React)
+  data/                        Placeholder catalog + starting build
+  hooks/                       usePlanner
+  services/                    bootstrap context, REST client
+  state/                       useReducer + Context (actions, reducer, context)
+  styles/                      Shell CSS (compiled to planner.css)
+  types/                       Domain interfaces (framework-agnostic)
+```
+
+## Build system
+
+- React + TypeScript
+- `@wordpress/scripts` (webpack) → WordPress-compatible compiled assets in
+  `assets/dist/` (`planner.js`, `planner.css`, `planner.asset.php`)
+- No Next.js, no Redux
+
+State is `useReducer` + React Context. The reducer is pure and consults the
+engine for geometry; side effects (REST) live in services/hooks.
+
+## Standalone / demo mode
+
+When no host registers an adapter via the `slate_upfit_planner_host_adapter`
+filter, the plugin uses `NullHostAdapter` and the shell renders in
+**standalone** mode against placeholder data (Sprinter 144, driver wall, three
+shelf SKUs). This lets the planner be developed and demoed without the Dealer
+Portal.
 
 ## Migration phases
 
-1. Scaffold plugin and host contract.
-2. Port Claude planner UI and state into React components.
-3. Move vehicle and product data into versioned data files.
-4. Migrate server-backed saved configurations.
-5. Add Dealer Portal host adapter and quote handoff.
-6. Run side-by-side parity testing.
-7. Switch `/configurator/` to the new plugin.
-8. Remove embedded planner only after rollback confidence is established.
+See [migration-plan.md](./migration-plan.md).
