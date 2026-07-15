@@ -1,21 +1,15 @@
 /**
- * Center canvas workspace. Phase 1 renders a simplified schematic of the active
- * wall with placed components positioned by their engine-computed x offset. The
- * full interactive drag/drop canvas is ported in a later phase.
+ * Center canvas workspace — hosts the interactive wall canvas plus a header
+ * (active wall + placement count) and the legend.
  */
 
 import { usePlanner } from '../hooks/usePlanner';
-
-const SCALE = 0.18; // mm -> px for the placeholder stage.
+import { WallCanvas } from './canvas/WallCanvas';
+import { CanvasLegend } from './canvas/CanvasLegend';
 
 export function CanvasWorkspace() {
-	const { state, removeComponent } = usePlanner();
-
-	const activeWall = state.vehicle.walls.find(
-		( w ) => w.id === state.activeWall
-	);
-
-	const placements = state.placements.filter(
+	const { state, activeWallGeometry } = usePlanner();
+	const onWall = state.placements.filter(
 		( p ) => p.wall === state.activeWall
 	);
 
@@ -24,44 +18,18 @@ export function CanvasWorkspace() {
 			<div className="sup-canvas__header">
 				<h2 className="sup-panel__title">
 					{ state.vehicle.name } —{ ' ' }
-					{ activeWall?.label ?? 'No wall selected' }
+					{ activeWallGeometry?.label ?? 'No wall' }
 				</h2>
 				<span className="sup-card__meta">
-					{ placements.length } placed
+					{ onWall.length } placed · top-down · 2D
 				</span>
 			</div>
 
 			<div className="sup-canvas__stage">
-				{ placements.map( ( placement ) => {
-					const component = state.componentsBySku[ placement.sku ];
-					if ( ! component ) {
-						return null;
-					}
-					return (
-						<div
-							key={ placement.id }
-							className="sup-placement"
-							style={ {
-								left: `${ placement.position.x * SCALE }px`,
-								width: `${ component.width * SCALE }px`,
-							} }
-							title={ component.name }
-						>
-							{ component.name }
-							<button
-								type="button"
-								className="sup-placement__remove"
-								aria-label={ `Remove ${ component.name }` }
-								onClick={ () =>
-									removeComponent( placement.id )
-								}
-							>
-								×
-							</button>
-						</div>
-					);
-				} ) }
+				<WallCanvas />
 			</div>
+
+			<CanvasLegend />
 		</section>
 	);
 }

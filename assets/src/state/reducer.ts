@@ -1,21 +1,20 @@
 /**
- * Planner reducer. Pure state transitions — no side effects, no React. The
- * engine is consulted for placement geometry, but persistence/quote effects
- * live in services and hooks, not here.
+ * Planner reducer. Pure, deterministic, serializable state transitions — no
+ * side effects, no React, and NO geometry/validation logic (that lives in the
+ * engine and is applied in the hook layer before dispatch).
  */
 
-import { findOpenPlacement } from '../engine';
 import type {
 	Placement,
 	PlannerComponent,
 	VehicleGeometry,
 	WallId,
 } from '../types';
-import type { PlannerAction } from './actions';
+import type { PlannerAction, Position } from './actions';
 
 /**
- * Highest numeric suffix among `placement-N` ids, floored at `floor`. Used so
- * newly placed components never collide with ids from a loaded configuration.
+ * Highest numeric suffix among `placement-N` ids, floored at `floor`, so newly
+ * placed components never collide with ids from a loaded configuration.
  * @param placements
  * @param floor
  */
@@ -32,13 +31,18 @@ function maxPlacementSeq( placements: Placement[], floor: number ): number {
 
 export interface PlannerState {
 	vehicle: VehicleGeometry;
-	activeWall: WallId | null;
+	activeWall: WallId;
+	/** Catalog product currently selected for placement. */
 	selectedSku: string | null;
+	/** Transient ghost preview position (not persisted). */
+	preview: { wall: WallId; position: Position } | null;
 	placements: Placement[];
+	/** Currently selected placed component. */
+	selectedPlacementId: string | null;
 	componentsBySku: Record< string, PlannerComponent >;
 	configurationId: string | null;
 	dealerNotes: string;
-	/** Monotonic counter used to mint unique placement ids without Date/random. */
+	/** Monotonic counter for minting placement ids without Date/random. */
 	placementSeq: number;
 }
 
@@ -46,19 +50,24 @@ export interface PlannerInit {
 	vehicle: VehicleGeometry;
 	componentsBySku: Record< string, PlannerComponent >;
 	placements: Placement[];
-	activeWall?: WallId | null;
+	activeWall?: WallId;
 }
 
 export function initPlannerState( init: PlannerInit ): PlannerState {
 	return {
 		vehicle: init.vehicle,
-		activeWall: init.activeWall ?? init.vehicle.walls[ 0 ]?.id ?? null,
+		activeWall: init.activeWall ?? 'driver',
 		selectedSku: null,
+		preview: null,
 		placements: init.placements,
+		selectedPlacementId: null,
 		componentsBySku: init.componentsBySku,
 		configurationId: null,
 		dealerNotes: '',
-		placementSeq: init.placements.length,
+		placementSeq: maxPlacementSeq(
+			init.placements,
+			init.placements.length
+		),
 	};
 }
 
@@ -71,75 +80,67 @@ export function plannerReducer(
 			return {
 				...state,
 				vehicle: action.vehicle,
-				activeWall: action.vehicle.walls[ 0 ]?.id ?? null,
+				activeWall: 'driver',
 				// Vehicle change invalidates existing placements.
 				placements: [],
+				preview: null,
+				selectedPlacementId: null,
 			};
-
-		case 'SELECT_WALL':
-			return { ...state, activeWall: action.wall };
 
 		case 'SELECT_PRODUCT':
 			return { ...state, selectedSku: action.sku };
 
+		case 'PREVIEW_PLACEMENT':
+			return { ...state, preview: action.preview };
+
 		case 'PLACE_COMPONENT': {
-			const component = state.componentsBySku[ action.sku ];
-			const wall = state.vehicle.walls.find(
-				( w ) => w.id === action.wall
-			);
-			if ( ! component || ! wall ) {
-				return state;
-			}
-
-			const position =
-				action.position ??
-				findOpenPlacement(
-					component,
-					wall,
-					state.placements,
-					state.componentsBySku
-				);
-
-			if ( ! position ) {
-				// No open space; leave state unchanged.
-				return state;
-			}
-
 			const seq = state.placementSeq + 1;
 			const placement: Placement = {
 				id: `placement-${ seq }`,
 				sku: action.sku,
 				wall: action.wall,
-				position,
+				position: action.position,
 			};
-
 			return {
 				...state,
 				placements: [ ...state.placements, placement ],
 				placementSeq: seq,
+				selectedPlacementId: placement.id,
+				preview: null,
 			};
 		}
 
-		case 'MOVE_COMPONENT':
+		case 'SELECT_PLACEMENT':
+			return { ...state, selectedPlacementId: action.placementId };
+
+		case 'MOVE_PLACEMENT':
 			return {
 				...state,
 				placements: state.placements.map( ( p ) =>
 					p.id === action.placementId
-						? {
-								...p,
-								position: action.position,
-								wall: action.wall ?? p.wall,
-						  }
+						? { ...p, position: action.position }
 						: p
 				),
 			};
 
-		case 'REMOVE_COMPONENT':
+		case 'REMOVE_PLACEMENT':
 			return {
 				...state,
 				placements: state.placements.filter(
 					( p ) => p.id !== action.placementId
 				),
+				selectedPlacementId:
+					state.selectedPlacementId === action.placementId
+						? null
+						: state.selectedPlacementId,
+			};
+
+		case 'SWITCH_WALL':
+			return {
+				...state,
+				activeWall: action.wall,
+				preview: null,
+				selectedPlacementId: null,
 			};
 
 		case 'LOAD_CONFIGURATION':
@@ -149,9 +150,8 @@ export function plannerReducer(
 				activeWall: action.payload.vehicle.wall ?? state.activeWall,
 				placements: action.placements,
 				dealerNotes: action.payload.dealer_notes,
-				// Derive the sequence from the highest existing numeric id so a
-				// loaded config with non-sequential ids (placement-1,
-				// placement-5) never mints a duplicate id on the next place.
+				preview: null,
+				selectedPlacementId: null,
 				placementSeq: maxPlacementSeq(
 					action.placements,
 					state.placementSeq
@@ -161,11 +161,23 @@ export function plannerReducer(
 		case 'SET_DEALER_NOTES':
 			return { ...state, dealerNotes: action.notes };
 
+		case 'CLEAR_WALL':
+			return {
+				...state,
+				placements: state.placements.filter(
+					( p ) => p.wall !== action.wall
+				),
+				preview: null,
+				selectedPlacementId: null,
+			};
+
 		case 'RESET_CONFIGURATION':
 			return {
 				...state,
 				selectedSku: null,
+				preview: null,
 				placements: [],
+				selectedPlacementId: null,
 				configurationId: null,
 				dealerNotes: '',
 			};

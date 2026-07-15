@@ -32,9 +32,9 @@ Current version: **`1.0`**.
 | `schema_version` | `"1.0"` | Bumped on breaking changes. |
 | `configuration_id` | `string \| null` | Host/local id once saved; `null` while unsaved. |
 | `vehicle` | object | `{ id, name, wheelbase, wall }`. |
-| `placements` | array | Placed components: `{ id, sku, wall, position }`. |
-| `infrastructure` | array | Electrical/power/structural items (Phase 1: empty). |
-| `exterior_equipment` | array | Exterior-mounted equipment (Phase 1: empty). |
+| `placements` | array | Placed components: `{ id, sku, wall, position }`. `position.x` is **inches from the front** along the wall; `position.y` is the height offset from the floor (0 for Phase 2 floor-standing shelves). Coordinates are engineering inches — never pixels. |
+| `infrastructure` | array | Electrical/power/structural items (empty through Phase 2). |
+| `exterior_equipment` | array | Exterior-mounted equipment (empty through Phase 2). |
 | `validation` | array | Fitment issues: `{ code, severity, message, placement_id? }`. |
 | `totals` | object | `{ wall_usage, payload, package_value }`. |
 | `dealer_notes` | string | Free text, ≤ 5000 chars. |

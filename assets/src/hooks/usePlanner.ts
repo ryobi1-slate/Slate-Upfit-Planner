@@ -1,26 +1,45 @@
 /**
- * Convenience hook exposing planner state, memoized selectors, and bound action
- * dispatchers to components.
+ * Convenience hook exposing planner state, memoized selectors, and bound
+ * actions to components.
+ *
+ * This layer owns the geometry/validation calls (clamp, snap, auto-placement,
+ * fitment) and dispatches already-resolved values, keeping the reducer pure.
  */
 
 import { useCallback, useMemo } from '@wordpress/element';
 import { usePlannerContext } from '../state/context';
 import * as actions from '../state/actions';
-import { buildNormalizedPayload } from '../engine';
-import type { ConfigurationPayload, Millimeters, WallId } from '../types';
+import {
+	buildNormalizedPayload,
+	checkPlacement,
+	clampPlacement,
+	findOpenPlacement,
+	getRemainingWallLength,
+	validateConfiguration,
+} from '../engine';
+import { getWall } from '../data/geometry';
+import type {
+	ConfigurationPayload,
+	FitmentResult,
+	Inches,
+	Placement,
+	WallGeometry,
+	WallId,
+} from '../types';
 
 export function usePlanner() {
 	const { state, dispatch, totals } = usePlannerContext();
+	const { vehicle, activeWall, selectedSku, placements, componentsBySku } =
+		state;
 
-	const selectVehicle = useCallback(
-		( ...args: Parameters< typeof actions.selectVehicle > ) =>
-			dispatch( actions.selectVehicle( ...args ) ),
-		[ dispatch ]
+	const activeWallGeometry = useMemo< WallGeometry | undefined >(
+		() => getWall( vehicle, activeWall ),
+		[ vehicle, activeWall ]
 	);
 
-	const selectWall = useCallback(
-		( wall: WallId ) => dispatch( actions.selectWall( wall ) ),
-		[ dispatch ]
+	const catalog = useMemo(
+		() => Object.values( componentsBySku ),
+		[ componentsBySku ]
 	);
 
 	const selectProduct = useCallback(
@@ -28,32 +47,23 @@ export function usePlanner() {
 		[ dispatch ]
 	);
 
-	const placeComponent = useCallback(
-		(
-			sku: string,
-			wall: WallId,
-			position?: { x: Millimeters; y: Millimeters }
-		) => dispatch( actions.placeComponent( sku, wall, position ) ),
+	const switchWall = useCallback(
+		( wall: WallId ) => dispatch( actions.switchWall( wall ) ),
 		[ dispatch ]
 	);
 
-	const moveComponent = useCallback(
-		(
-			placementId: string,
-			position: { x: Millimeters; y: Millimeters },
-			wall?: WallId
-		) => dispatch( actions.moveComponent( placementId, position, wall ) ),
+	const selectPlacement = useCallback(
+		( id: string | null ) => dispatch( actions.selectPlacement( id ) ),
 		[ dispatch ]
 	);
 
-	const removeComponent = useCallback(
-		( placementId: string ) =>
-			dispatch( actions.removeComponent( placementId ) ),
+	const removePlacement = useCallback(
+		( id: string ) => dispatch( actions.removePlacement( id ) ),
 		[ dispatch ]
 	);
 
-	const setDealerNotes = useCallback(
-		( notes: string ) => dispatch( actions.setDealerNotes( notes ) ),
+	const clearWall = useCallback(
+		( wall: WallId ) => dispatch( actions.clearWall( wall ) ),
 		[ dispatch ]
 	);
 
@@ -62,36 +72,163 @@ export function usePlanner() {
 		[ dispatch ]
 	);
 
+	const setDealerNotes = useCallback(
+		( notes: string ) => dispatch( actions.setDealerNotes( notes ) ),
+		[ dispatch ]
+	);
+
+	/** Update the ghost preview for the selected product at a raw inch position. */
+	const previewAt = useCallback(
+		( wall: WallId, rawInches: Inches ) => {
+			const sku = selectedSku;
+			const wallGeo = getWall( vehicle, wall );
+			const component = sku ? componentsBySku[ sku ] : undefined;
+			if ( ! sku || ! wallGeo || ! component ) {
+				dispatch( actions.previewPlacement( null ) );
+				return;
+			}
+			const x = clampPlacement( rawInches, component, wallGeo );
+			dispatch(
+				actions.previewPlacement( { wall, position: { x, y: 0 } } )
+			);
+		},
+		[ dispatch, selectedSku, vehicle, componentsBySku ]
+	);
+
+	const clearPreview = useCallback(
+		() => dispatch( actions.previewPlacement( null ) ),
+		[ dispatch ]
+	);
+
+	/**
+	 * Place the selected product. With a raw inch position, clamps/snaps to it;
+	 * otherwise auto-finds the first legal open spot. No-op if nothing fits.
+	 */
+	const placeSelected = useCallback(
+		( wall: WallId, rawInches?: Inches ) => {
+			const sku = selectedSku;
+			const wallGeo = getWall( vehicle, wall );
+			const component = sku ? componentsBySku[ sku ] : undefined;
+			if ( ! sku || ! wallGeo || ! component ) {
+				return;
+			}
+			let position: { x: Inches; y: Inches } | null;
+			if ( rawInches !== undefined ) {
+				position = {
+					x: clampPlacement( rawInches, component, wallGeo ),
+					y: 0,
+				};
+			} else {
+				position = findOpenPlacement(
+					component,
+					wallGeo,
+					placements,
+					componentsBySku
+				);
+			}
+			if ( ! position ) {
+				return;
+			}
+			dispatch( actions.placeComponent( sku, wall, position ) );
+		},
+		[ dispatch, selectedSku, vehicle, placements, componentsBySku ]
+	);
+
+	/** Move a placed component to a raw inch position (clamped/snapped). */
+	const moveTo = useCallback(
+		( placementId: string, rawInches: Inches ) => {
+			const placement = placements.find( ( p ) => p.id === placementId );
+			const wallGeo = placement
+				? getWall( vehicle, placement.wall )
+				: undefined;
+			const component = placement
+				? componentsBySku[ placement.sku ]
+				: undefined;
+			if ( ! placement || ! wallGeo || ! component ) {
+				return;
+			}
+			const x = clampPlacement( rawInches, component, wallGeo );
+			dispatch( actions.movePlacement( placementId, { x, y: 0 } ) );
+		},
+		[ dispatch, placements, vehicle, componentsBySku ]
+	);
+
+	/** Fitment result for a single placement (for canvas conflict rendering). */
+	const fitmentFor = useCallback(
+		( placement: Placement ): FitmentResult | null => {
+			const wallGeo = getWall( vehicle, placement.wall );
+			const component = componentsBySku[ placement.sku ];
+			if ( ! wallGeo || ! component ) {
+				return null;
+			}
+			return checkPlacement(
+				placement,
+				component,
+				vehicle,
+				wallGeo,
+				placements,
+				componentsBySku
+			);
+		},
+		[ vehicle, placements, componentsBySku ]
+	);
+
+	const issues = useMemo(
+		() => validateConfiguration( vehicle, placements, componentsBySku ),
+		[ vehicle, placements, componentsBySku ]
+	);
+
+	const remainingOnActiveWall = useMemo(
+		() =>
+			activeWallGeometry
+				? getRemainingWallLength(
+						activeWallGeometry,
+						placements,
+						componentsBySku
+				  )
+				: 0,
+		[ activeWallGeometry, placements, componentsBySku ]
+	);
+
 	const buildPayload = useCallback(
 		(): ConfigurationPayload =>
 			buildNormalizedPayload( {
 				configurationId: state.configurationId,
-				vehicle: state.vehicle,
-				activeWall: state.activeWall,
-				placements: state.placements,
-				componentsBySku: state.componentsBySku,
+				vehicle,
+				activeWall,
+				placements,
+				componentsBySku,
 				dealerNotes: state.dealerNotes,
 			} ),
-		[ state ]
-	);
-
-	const catalog = useMemo(
-		() => Object.values( state.componentsBySku ),
-		[ state.componentsBySku ]
+		[
+			state.configurationId,
+			vehicle,
+			activeWall,
+			placements,
+			componentsBySku,
+			state.dealerNotes,
+		]
 	);
 
 	return {
 		state,
 		totals,
 		catalog,
-		selectVehicle,
-		selectWall,
+		activeWallGeometry,
+		issues,
+		remainingOnActiveWall,
 		selectProduct,
-		placeComponent,
-		moveComponent,
-		removeComponent,
-		setDealerNotes,
+		switchWall,
+		selectPlacement,
+		previewAt,
+		clearPreview,
+		placeSelected,
+		moveTo,
+		removePlacement,
+		clearWall,
 		resetConfiguration,
+		setDealerNotes,
+		fitmentFor,
 		buildPayload,
 	};
 }

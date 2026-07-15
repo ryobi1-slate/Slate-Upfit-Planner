@@ -60,6 +60,10 @@ no Redux. State is `useReducer` + React Context.
 
 ## Development status
 
-Phase 1 scaffold: working product shell, engine boundary, state, host adapter,
-schema, and WordPress mount. Full planner logic, real catalog data, pricing,
-quotes, and persistence are migrated in later phases (see the migration plan).
+Phase 2: interactive driver/passenger **wall canvas** and a real, typed
+**fitment engine** over real Sprinter 144 geometry and a fixed Westcan shelf
+catalog — select, preview, place, drag (1" snap), validate, and remove, with
+build-sheet totals and payload. Pricing, quotes, persistence, host adapter,
+Business Central, and roof/floor/rear planners are migrated in later phases (see
+[docs/migration-plan.md](docs/migration-plan.md), [docs/fitment-engine.md](docs/fitment-engine.md),
+and [docs/geometry-data.md](docs/geometry-data.md)).

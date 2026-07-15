@@ -80,13 +80,16 @@ assets/src/
   main.tsx                     Browser entry (mounts React app)
   app/App.tsx                  Product shell composition
   components/                  TopNav, ConfigurationRail, CanvasWorkspace, BuildSheetRail
-  engine/                      Pure fitment engine (no React)
-  data/                        Placeholder catalog + starting build
-  hooks/                       usePlanner
+  components/canvas/           Interactive wall canvas:
+                               WallCanvas, WallCanvasSvg, ZoneOverlay,
+                               PlacementBlock, PlacementPreview, CanvasLegend, scale
+  engine/                      Pure fitment engine — no React (geometry/fitment/payload)
+  data/                        geometry.ts (Sprinter 144) + catalog.ts (Westcan shelves)
+  hooks/                       usePlanner (engine ↔ dispatch bridge)
   services/                    bootstrap context, REST client
   state/                       useReducer + Context (actions, reducer, context)
-  styles/                      Shell CSS (compiled to planner.css)
-  types/                       Domain interfaces (framework-agnostic)
+  styles/                      Shell + canvas CSS (compiled to planner.css)
+  types/                       Domain interfaces (framework-agnostic, inches)
 ```
 
 ## Build system
@@ -96,16 +99,27 @@ assets/src/
   `assets/dist/` (`planner.js`, `planner.css`, `planner.asset.php`)
 - No Next.js, no Redux
 
-State is `useReducer` + React Context. The reducer is pure and consults the
-engine for geometry; side effects (REST) live in services/hooks.
+State is `useReducer` + React Context. The reducer is pure, deterministic, and
+serializable — it holds **no** geometry/validation logic. The hook layer
+(`usePlanner`) calls the engine (snap, clamp, auto-placement, fitment) and
+dispatches already-resolved values. Pixel conversion is isolated to
+`components/canvas/scale.ts`; the canonical unit everywhere else is the inch, and
+pixels never enter the normalized payload.
+
+## Fitment engine + geometry
+
+The interactive driver/passenger wall canvas and the fitment engine are the
+core of Phase 2. See [fitment-engine.md](./fitment-engine.md) for the rules and
+what was ported from the Claude reference, and [geometry-data.md](./geometry-data.md)
+for the Sprinter 144 geometry and the fixed Westcan shelf catalog.
 
 ## Standalone / demo mode
 
 When no host registers an adapter via the `slate_upfit_planner_host_adapter`
 filter, the plugin uses `NullHostAdapter` and the shell renders in
-**standalone** mode against placeholder data (Sprinter 144, driver wall, three
-shelf SKUs). This lets the planner be developed and demoed without the Dealer
-Portal.
+**standalone** mode against fixed data (Sprinter 144 High Roof geometry + a
+five-shelf Westcan catalog). This lets the planner be developed and demoed
+without the Dealer Portal.
 
 ## Migration phases
 

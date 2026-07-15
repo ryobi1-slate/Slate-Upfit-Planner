@@ -13,7 +13,7 @@ rollback path at every step.
   integration into the planner. Those remain host-owned behind the adapter.
 - Every phase is independently shippable and reversible.
 
-## Phase 1 — Scaffold (this phase)
+## Phase 1 — Scaffold (done)
 
 - Standalone plugin skeleton, build system (React + TypeScript +
   `@wordpress/scripts`), and WordPress mount (`[slate_upfit_planner]`).
@@ -29,16 +29,31 @@ rollback path at every step.
 **Out of scope for Phase 1:** real catalog data, full Claude planner logic,
 pricing, quotes, server-backed persistence, Business Central.
 
-## Phase 2 — Port planner UI and interaction
+## Phase 2 — Port the canvas + fitment engine (this phase)
 
-- Port the Claude planner components and interactions into the shell.
-- Replace placeholder canvas with the interactive drag/drop workspace.
+Combined the interactive canvas and the fitment/geometry port (per the Phase 2
+handoff package).
 
-## Phase 3 — Port the fitment engine
+- Interactive **driver/passenger wall canvas** (`components/canvas/`): select
+  product, ghost preview, click-to-place, select, drag with 1" snap, remove,
+  wall switch preserving each wall's layout, keyboard nudge/remove, and
+  valid/warning/conflict states.
+- Real **fitment engine** (pure TS) behind the stable boundary
+  (`findOpenPlacement`, `validatePlacement`, `calculateWallUsage`,
+  `calculatePayload`, `buildNormalizedPayload` + helpers), ported from the Claude
+  `issues()` / `findSpot()` reference. See [fitment-engine.md](./fitment-engine.md).
+- Real **Sprinter 144** geometry (Standard + High Roof) and a fixed five-shelf
+  Westcan catalog in version-controlled TS. See [geometry-data.md](./geometry-data.md).
+- Payload core (driver/passenger weight sum; `remaining = capacity − weight`).
+- Engine + interaction-flow unit tests.
 
-- Move the full Claude geometry/packing/rules logic behind the existing engine
-  boundary (`findOpenPlacement`, `validatePlacement`, `calculateWallUsage`,
-  `calculatePayload`, `buildNormalizedPayload`), keeping signatures stable.
+**Out of scope for Phase 2:** pricing, persistence, quote handoff, Business
+Central, roof/floor/rear planners, infrastructure systems, host adapter.
+
+## Phase 3 — Broaden geometry + packages
+
+- Add remaining vehicles (170"/EWB, Metris) and non-shelf placement modes behind
+  the same engine boundary; build packages / templates.
 
 ## Phase 4 — Versioned data
 
