@@ -70,7 +70,10 @@ export function validatePlacement(
 		const overlapsX =
 			placement.position.x < other.position.x + otherComponent.width &&
 			placement.position.x + component.width > other.position.x;
-		if ( overlapsX ) {
+		const overlapsY =
+			placement.position.y < other.position.y + otherComponent.height &&
+			placement.position.y + component.height > other.position.y;
+		if ( overlapsX && overlapsY ) {
 			issues.push( {
 				code: 'overlap',
 				severity: 'warning',

@@ -27,6 +27,7 @@
     "vehicle": {
       "type": "object",
       "description": "Selected vehicle and geometry reference.",
+      "required": ["id", "name", "wheelbase", "wall"],
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
@@ -37,7 +38,23 @@
     "placements": {
       "type": "array",
       "description": "Placed components with their positions on a wall/zone.",
-      "items": { "type": "object" }
+      "items": {
+        "type": "object",
+        "required": ["id", "sku", "wall", "position"],
+        "properties": {
+          "id": { "type": "string" },
+          "sku": { "type": "string" },
+          "wall": { "type": "string" },
+          "position": {
+            "type": "object",
+            "required": ["x", "y"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          }
+        }
+      }
     },
     "infrastructure": {
       "type": "array",

@@ -13,6 +13,23 @@ import type {
 } from '../types';
 import type { PlannerAction } from './actions';
 
+/**
+ * Highest numeric suffix among `placement-N` ids, floored at `floor`. Used so
+ * newly placed components never collide with ids from a loaded configuration.
+ * @param placements
+ * @param floor
+ */
+function maxPlacementSeq( placements: Placement[], floor: number ): number {
+	return placements.reduce( ( max, p ) => {
+		const match = /placement-(\d+)/.exec( p.id );
+		if ( ! match ) {
+			return max;
+		}
+		const num = parseInt( match[ 1 ]!, 10 );
+		return num > max ? num : max;
+	}, floor );
+}
+
 export interface PlannerState {
 	vehicle: VehicleGeometry;
 	activeWall: WallId | null;
@@ -132,9 +149,12 @@ export function plannerReducer(
 				activeWall: action.payload.vehicle.wall ?? state.activeWall,
 				placements: action.placements,
 				dealerNotes: action.payload.dealer_notes,
-				placementSeq: Math.max(
-					state.placementSeq,
-					action.placements.length
+				// Derive the sequence from the highest existing numeric id so a
+				// loaded config with non-sequential ids (placement-1,
+				// placement-5) never mints a duplicate id on the next place.
+				placementSeq: maxPlacementSeq(
+					action.placements,
+					state.placementSeq
 				),
 			};
 

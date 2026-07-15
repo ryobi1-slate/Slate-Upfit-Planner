@@ -75,10 +75,12 @@ export function ConfigurationRail() {
 									( selected ? ' sup-card--selected' : '' )
 								}
 								onClick={ () => {
+									const nextSelected = ! selected;
 									selectProduct(
-										selected ? null : component.sku
+										nextSelected ? component.sku : null
 									);
-									if ( state.activeWall ) {
+									// Only place when selecting, never on deselect.
+									if ( nextSelected && state.activeWall ) {
 										placeComponent(
 											component.sku,
 											state.activeWall

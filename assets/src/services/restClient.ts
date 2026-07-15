@@ -55,10 +55,21 @@ export class RestClient {
 			data = null;
 		}
 
-		const errors =
-			data && typeof data === 'object' && 'errors' in data
-				? ( data as { errors?: string[] } ).errors ?? []
-				: [];
+		// Prefer our custom `errors` array, but fall back to the standard
+		// WordPress REST error shape ({ code, message, data }) so 4xx/5xx
+		// messages aren't silently dropped.
+		let errors: string[] = [];
+		if ( data && typeof data === 'object' ) {
+			const body = data as {
+				errors?: unknown;
+				message?: unknown;
+			};
+			if ( Array.isArray( body.errors ) ) {
+				errors = body.errors.map( ( e ) => String( e ) );
+			} else if ( typeof body.message === 'string' ) {
+				errors = [ body.message ];
+			}
+		}
 
 		return { ok: response.ok, status: response.status, data, errors };
 	}

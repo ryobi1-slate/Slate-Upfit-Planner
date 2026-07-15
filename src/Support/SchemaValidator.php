@@ -64,21 +64,23 @@ final class SchemaValidator
             }
         }
 
-        if (isset($payload['vehicle']) && ! is_array($payload['vehicle'])) {
+        // Use array_key_exists (not isset) so an explicit null value is still
+        // type-checked and flagged rather than silently skipped.
+        if (array_key_exists('vehicle', $payload) && ! is_array($payload['vehicle'])) {
             $errors[] = 'vehicle must be an object.';
         }
 
         foreach (['placements', 'infrastructure', 'exterior_equipment', 'validation'] as $listKey) {
-            if (isset($payload[$listKey]) && ! is_array($payload[$listKey])) {
+            if (array_key_exists($listKey, $payload) && ! is_array($payload[$listKey])) {
                 $errors[] = sprintf('%s must be an array.', $listKey);
             }
         }
 
-        if (isset($payload['totals']) && ! is_array($payload['totals'])) {
+        if (array_key_exists('totals', $payload) && ! is_array($payload['totals'])) {
             $errors[] = 'totals must be an object.';
         }
 
-        if (isset($payload['dealer_notes']) && ! is_string($payload['dealer_notes'])) {
+        if (array_key_exists('dealer_notes', $payload) && ! is_string($payload['dealer_notes'])) {
             $errors[] = 'dealer_notes must be a string.';
         }
 

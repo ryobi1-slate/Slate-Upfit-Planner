@@ -32,8 +32,9 @@ export function calculatePayload(
 		0
 	);
 
-	const remaining =
-		vehicle.payloadCapacity - vehicle.curbWeight - componentWeight;
+	// payloadCapacity is the weight the chassis can carry on top of its curb
+	// weight, so remaining payload is capacity minus placed component weight.
+	const remaining = vehicle.payloadCapacity - componentWeight;
 
 	return {
 		componentWeight,
