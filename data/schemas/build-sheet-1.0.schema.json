@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://slatebuilt.com/schemas/build-sheet-1.0.schema.json", "title": "Build Sheet 1.0",
+  "type": "object", "required": ["schema_version", "configuration_id", "vehicle", "package", "components", "unplaced_items", "payload", "engineering_data"],
+  "properties": {
+    "schema_version": { "const": "1.0" }, "configuration_id": { "type": ["string", "null"] },
+    "vehicle": { "type": "object" }, "package": { "type": ["object", "null"] }, "components": { "type": "array", "items": { "type": "object" } }, "unplaced_items": { "type": "array", "items": { "type": "object" } }, "payload": { "type": "object" }, "engineering_data": { "type": "object" }
+  }, "additionalProperties": false
+}

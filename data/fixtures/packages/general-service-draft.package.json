@@ -1,0 +1,5 @@
+{
+  "schema_version": "1.0",
+  "metadata": { "record_revision": "draft-1", "approval_state": "draft", "source": { "title": "Draft package identity", "reference": null, "retrieved_on": null }, "prepared_by": null, "verified_by": null, "approved_by": null, "last_verified": null, "change_summary": "Empty draft fixture; composition is intentionally not defined." },
+  "data": { "package_id": "general-service", "package_name": "General Service", "revision": "draft-1", "description": "Composition pending operations approval.", "supported_vehicle_ids": [], "compatibility_rule_ids": [], "components": [], "fallback_rules": [], "install_estimate": { "value": null, "unit": "hours", "status": "pending" }, "lifecycle_status": "draft" }
+}

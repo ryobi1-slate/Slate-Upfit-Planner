@@ -3,13 +3,15 @@
 The planner exchanges a single **versioned normalized payload** with WordPress
 REST and the host adapter. It is the source of truth for save and quote handoff.
 
-- Canonical JSON Schema: [`data/configuration-schema.json`](../data/configuration-schema.json)
+- Versioned JSON Schemas: [`data/schemas/`](../data/schemas)
 - TypeScript type: `ConfigurationPayload` in `assets/src/types/index.ts`
 - PHP validator: `Slate\UpfitPlanner\Support\SchemaValidator`
 
-Current version: **`1.0`**.
+Supported versions: **`1.0`** and **`1.1`**. New Phase 3 configurations use
+1.1; 1.0 remains valid for v0.2.5 compatibility.
 
-The PHP `SchemaValidator` loads the canonical JSON file directly. Structural
+The PHP `SchemaValidator` uses `SchemaRegistry` to select the contract version.
+Structural
 rules belong in the JSON Schema instead of being duplicated in PHP. Placement
 ID uniqueness remains a domain check because base JSON Schema cannot express
 uniqueness by one object field.
@@ -17,6 +19,14 @@ uniqueness by one object field.
 Schema 1.0 rejects unsupported versions, walls outside `driver`/`passenger`,
 unknown Phase 2 SKUs, malformed or negative coordinates, extra object fields,
 and duplicate placement IDs.
+
+Schema 1.1 keeps those placement fields, changes `sku` to a nonempty string,
+and adds pinned geometry/catalog revisions, package origin and divergence,
+unplaced items, and engineering-data resolution status. SKU existence is a
+repository/domain rule rather than a hard-coded schema enum.
+
+The 1.0-to-1.1 migration preserves IDs and inch coordinates. Revisions that
+cannot be proven are explicitly unresolved; approval is never inferred.
 
 ## Shape
 

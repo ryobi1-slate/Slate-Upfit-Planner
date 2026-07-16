@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "metadata": { "record_revision": "draft-1", "approval_state": "draft", "source": { "title": "Phase 2 candidate data; authoritative source review pending", "reference": null, "retrieved_on": null }, "prepared_by": null, "verified_by": null, "approved_by": null, "last_verified": null, "change_summary": "Draft fixture only; not approved commercial data." },
+  "data": {
+    "vehicle_id": "mercedes-benz-sprinter-144-high-roof", "manufacturer": "Mercedes-Benz", "model": "Sprinter",
+    "model_year_range": { "from": null, "to": null, "status": "pending" },
+    "wheelbase": { "value": 144, "unit": "in", "status": "unverified" }, "body_length": "standard", "roof_height": "high", "drivetrain": null, "chassis_variant": null,
+    "payload_capacity": { "value": null, "unit": "lb", "status": "pending" }, "geometry_id": "mercedes-benz-sprinter-144-high-roof-geometry", "geometry_revision": "draft-1",
+    "supported_placement_surfaces": ["driver_wall", "passenger_wall"], "lifecycle_status": "draft"
+  }
+}

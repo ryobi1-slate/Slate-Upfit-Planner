@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slatebuilt.com/schemas/vehicle-1.0.schema.json",
+  "title": "Vehicle Record 1.0",
+  "allOf": [{ "$ref": "engineering-data-envelope-1.0.schema.json" }],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "data": {
+      "type": "object",
+      "required": ["vehicle_id", "manufacturer", "model", "model_year_range", "wheelbase", "body_length", "roof_height", "drivetrain", "chassis_variant", "payload_capacity", "geometry_id", "geometry_revision", "supported_placement_surfaces", "lifecycle_status"],
+      "properties": {
+        "vehicle_id": { "type": "string", "minLength": 1 },
+        "manufacturer": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "model_year_range": { "type": "object", "required": ["from", "to", "status"], "properties": { "from": { "type": ["integer", "null"], "minimum": 1900 }, "to": { "type": ["integer", "null"], "minimum": 1900 }, "status": { "enum": ["verified", "unverified", "pending"] } }, "additionalProperties": false },
+        "wheelbase": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "body_length": { "type": "string", "minLength": 1 },
+        "roof_height": { "enum": ["standard", "high", "super_high", "pending"] },
+        "drivetrain": { "type": ["string", "null"] },
+        "chassis_variant": { "type": ["string", "null"] },
+        "payload_capacity": { "$ref": "engineering-data-envelope-1.0.schema.json#/$defs/measurement" },
+        "geometry_id": { "type": "string", "minLength": 1 },
+        "geometry_revision": { "type": ["string", "null"], "minLength": 1 },
+        "supported_placement_surfaces": { "type": "array", "items": { "enum": ["driver_wall", "passenger_wall"] }, "uniqueItems": true },
+        "lifecycle_status": { "enum": ["draft", "active", "deprecated"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

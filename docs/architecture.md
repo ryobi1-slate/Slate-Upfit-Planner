@@ -66,11 +66,13 @@ src/
   Persistence/
     ConfigurationRepository.php Save boundary (schema-validated)
   Support/
-    SchemaValidator.php        Structural payload validation
+    SchemaRegistry.php         Contract/version to schema mapping
+    SchemaValidator.php        Focused structural payload validation
 templates/
   planner-mount.php            Shortcode mount markup
 data/
-  configuration-schema.json    Canonical JSON schema (v1.0)
+  schemas/                     Versioned knowledge/configuration contracts
+  fixtures/                    Draft-only schema and repository fixtures
 ```
 
 ## Front-end structure
@@ -84,6 +86,8 @@ assets/src/
                                WallCanvas, WallCanvasSvg, ZoneOverlay,
                                PlacementBlock, PlacementPreview, CanvasLegend, scale
   engine/                      Pure fitment engine — no React (geometry/fitment/payload)
+  domain/                      Phase 3 schema-aligned domain types
+  repositories/                Constructor-injected read-only indexes
   data/                        geometry.ts (Sprinter 144) + catalog.ts (Westcan shelves)
   hooks/                       usePlanner (engine ↔ dispatch bridge)
   services/                    bootstrap context, REST client
@@ -138,3 +142,10 @@ package JSON files must use the provenance metadata contract in
 `data/engineering-data-schema.json`.
 
 Architecture decisions are recorded under [`docs/ADR`](./ADR/).
+
+## Phase 3 knowledge foundation
+
+The knowledge layer keeps data loading outside domain repositories. Parsed
+records are validated, checked for cross-record integrity, defensively copied,
+and indexed by stable ID plus explicit revision. Production listings expose
+approved records only. See [phase-3-knowledge-layer.md](./phase-3-knowledge-layer.md).

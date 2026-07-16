@@ -73,6 +73,10 @@ and Business Central.
 - Improve build-sheet reporting for package status and unplaced required items.
 - Keep pricing, quote creation, and downstream operations host-owned.
 
+The first Phase 3 PR establishes schemas, draft fixtures, read-only
+repositories, and configuration 1.0-to-1.1 migration only. It adds no approved
+commercial data, compatibility evaluation, package preload, or UI changes.
+
 ## Phase 4 — Versioned data
 
 - Move vehicle geometry, walls, catalog, and packages into versioned data files

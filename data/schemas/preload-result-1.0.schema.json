@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://slatebuilt.com/schemas/preload-result-1.0.schema.json", "title": "Preload Result 1.0",
+  "type": "object", "required": ["schema_version", "strategy_version", "vehicle", "package", "status", "results", "summary"],
+  "properties": {
+    "schema_version": { "const": "1.0" }, "strategy_version": { "type": "string", "minLength": 1 },
+    "vehicle": { "$ref": "#/$defs/revisionRef" }, "package": { "$ref": "#/$defs/revisionRef" }, "status": { "enum": ["complete", "partial", "failed"] },
+    "results": { "type": "object", "required": ["placed", "placed_with_warnings", "unplaced", "incompatible", "missing_data"], "properties": { "placed": { "$ref": "#/$defs/results" }, "placed_with_warnings": { "$ref": "#/$defs/results" }, "unplaced": { "$ref": "#/$defs/results" }, "incompatible": { "$ref": "#/$defs/results" }, "missing_data": { "$ref": "#/$defs/results" } }, "additionalProperties": false },
+    "summary": { "type": "object", "required": ["requested", "accounted_for", "required_failures", "optional_failures"], "properties": { "requested": { "type": "integer", "minimum": 0 }, "accounted_for": { "type": "integer", "minimum": 0 }, "required_failures": { "type": "integer", "minimum": 0 }, "optional_failures": { "type": "integer", "minimum": 0 } }, "additionalProperties": false }
+  }, "additionalProperties": false,
+  "$defs": { "revisionRef": { "type": "object", "required": ["id", "revision"], "properties": { "id": { "type": "string", "minLength": 1 }, "revision": { "type": "string", "minLength": 1 } }, "additionalProperties": false }, "results": { "type": "array", "items": { "type": "object" } } }
+}

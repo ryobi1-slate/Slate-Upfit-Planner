@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slatebuilt.com/schemas/compatibility-rule-1.0.schema.json",
+  "title": "Compatibility Rule 1.0",
+  "allOf": [{ "$ref": "engineering-data-envelope-1.0.schema.json" }],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "data": {
+      "type": "object",
+      "required": ["rule_id", "revision", "scope", "subject", "condition", "failure"],
+      "properties": {
+        "rule_id": { "type": "string", "minLength": 1 }, "revision": { "type": "string", "minLength": 1 }, "scope": { "enum": ["vehicle", "product", "package"] },
+        "subject": { "type": "object", "required": ["type", "id"], "properties": { "type": { "enum": ["vehicle", "sku", "package"] }, "id": { "type": "string", "minLength": 1 } }, "additionalProperties": false },
+        "condition": { "$ref": "#/$defs/condition" },
+        "failure": { "type": "object", "required": ["code", "severity", "blocking", "message"], "properties": { "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" }, "severity": { "enum": ["error", "warning", "info", "pending_data"] }, "blocking": { "type": "boolean" }, "message": { "type": "string", "minLength": 1 } }, "additionalProperties": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "condition": {
+      "oneOf": [
+        { "type": "object", "required": ["operator", "conditions"], "properties": { "operator": { "enum": ["all", "any"] }, "conditions": { "type": "array", "items": { "$ref": "#/$defs/condition" }, "minItems": 1 } }, "additionalProperties": false },
+        { "type": "object", "required": ["operator", "condition"], "properties": { "operator": { "const": "not" }, "condition": { "$ref": "#/$defs/condition" } }, "additionalProperties": false },
+        { "type": "object", "required": ["fact", "operator", "value"], "properties": { "fact": { "enum": ["vehicle.vehicle_id", "vehicle.model", "vehicle.wheelbase", "vehicle.body_length", "vehicle.roof_height", "vehicle.drivetrain", "vehicle.chassis_variant", "vehicle.door_configuration", "vehicle.payload_capacity", "configuration.component_weight", "placement.surface", "configuration.sku_quantity", "configuration.present_skus", "package.package_id", "package.revision"] }, "operator": { "enum": ["equals", "not_equals", "in", "not_in", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "contains_all", "contains_any", "exists"] }, "value": {} }, "additionalProperties": false }
+      ]
+    }
+  }
+}

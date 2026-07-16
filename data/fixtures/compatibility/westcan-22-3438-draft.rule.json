@@ -1,0 +1,5 @@
+{
+  "schema_version": "1.0",
+  "metadata": { "record_revision": "draft-1", "approval_state": "draft", "source": { "title": "Draft compatibility example", "reference": null, "retrieved_on": null }, "prepared_by": null, "verified_by": null, "approved_by": null, "last_verified": null, "change_summary": "Schema fixture only; no compatibility behavior is approved." },
+  "data": { "rule_id": "westcan-22-3438-draft", "revision": "draft-1", "scope": "product", "subject": { "type": "sku", "id": "Westcan::22-3438" }, "condition": { "fact": "placement.surface", "operator": "in", "value": ["driver_wall", "passenger_wall"] }, "failure": { "code": "PRODUCT_SURFACE_INCOMPATIBLE", "severity": "error", "blocking": true, "message": "Product is not approved for the selected surface." } }
+}
