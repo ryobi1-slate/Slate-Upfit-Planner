@@ -65,16 +65,27 @@ export function validateRepositoryReferences( input: {
 				`${ record.data.geometry_id }@${ record.data.geometry_revision }`
 		)
 	);
+	const geometryIds = new Set(
+		input.geometries.map( ( record ) => record.data.geometry_id )
+	);
 	const productKeys = new Set(
 		input.catalog.map(
 			( record ) => `${ record.data.manufacturer }::${ record.data.sku }`
 		)
+	);
+	const productSkus = new Set(
+		input.catalog.map( ( record ) => record.data.sku )
 	);
 	const ruleKeys = new Set(
 		input.rules.map( ( record ) => record.data.rule_id )
 	);
 
 	for ( const vehicle of input.vehicles ) {
+		if ( ! geometryIds.has( vehicle.data.geometry_id ) ) {
+			throw new RepositoryIntegrityError(
+				`Vehicle ${ vehicle.data.vehicle_id } references missing geometry ${ vehicle.data.geometry_id }`
+			);
+		}
 		if (
 			vehicle.data.geometry_revision &&
 			! geometryKeys.has(
@@ -129,12 +140,29 @@ export function validateRepositoryReferences( input: {
 				);
 			}
 		}
+		for ( const ruleId of pkg.data.fallback_rules ) {
+			if ( ! ruleKeys.has( ruleId ) ) {
+				throw new RepositoryIntegrityError(
+					`Package ${ pkg.data.package_id } references missing fallback rule ${ ruleId }`
+				);
+			}
+		}
 		for ( const component of pkg.data.components ) {
-			if (
-				! Array.from( productKeys ).some( ( key ) =>
-					key.endsWith( `::${ component.sku }` )
-				)
-			) {
+			for ( const ruleId of component.compatibility_rule_ids ) {
+				if ( ! ruleKeys.has( ruleId ) ) {
+					throw new RepositoryIntegrityError(
+						`Package ${ pkg.data.package_id } component ${ component.sku } references missing compatibility rule ${ ruleId }`
+					);
+				}
+			}
+			for ( const ruleId of component.fallback_rule_ids ) {
+				if ( ! ruleKeys.has( ruleId ) ) {
+					throw new RepositoryIntegrityError(
+						`Package ${ pkg.data.package_id } component ${ component.sku } references missing fallback rule ${ ruleId }`
+					);
+				}
+			}
+			if ( ! productSkus.has( component.sku ) ) {
 				throw new RepositoryIntegrityError(
 					`Package ${ pkg.data.package_id } references missing SKU ${ component.sku }`
 				);

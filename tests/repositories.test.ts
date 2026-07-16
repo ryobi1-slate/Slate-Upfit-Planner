@@ -84,6 +84,56 @@ describe( 'read-only repositories', () => {
 				packages: [ pkg ],
 			} )
 		).toThrow( /missing geometry/ );
+
+		const missingGeometryId = clone( vehicle );
+		missingGeometryId.data.geometry_id = 'missing-geometry';
+		missingGeometryId.data.geometry_revision = null;
+		expect( () =>
+			createRepositories( {
+				vehicles: [ missingGeometryId ],
+				geometries: [ geometry ],
+				catalog: [ product ],
+				rules: [ rule ],
+				packages: [ pkg ],
+			} )
+		).toThrow( /missing geometry missing-geometry/ );
+	} );
+
+	it( 'rejects missing package and component rule references', () => {
+		const packageWithMissingFallback = clone( pkg );
+		packageWithMissingFallback.data.fallback_rules = [ 'missing-rule' ];
+		expect( () =>
+			createRepositories( {
+				vehicles: [ vehicle ],
+				geometries: [ geometry ],
+				catalog: [ product ],
+				rules: [ rule ],
+				packages: [ packageWithMissingFallback ],
+			} )
+		).toThrow( /missing fallback rule missing-rule/ );
+
+		const packageWithMissingComponentRule = clone( pkg );
+		packageWithMissingComponentRule.data.components = [
+			{
+				component_id: 'draft-component',
+				sku: product.data.sku,
+				requirement: 'required',
+				quantity: 1,
+				preferred_surface: 'driver_wall',
+				placement_order: 1,
+				fallback_rule_ids: [],
+				compatibility_rule_ids: [ 'missing-component-rule' ],
+			},
+		];
+		expect( () =>
+			createRepositories( {
+				vehicles: [ vehicle ],
+				geometries: [ geometry ],
+				catalog: [ product ],
+				rules: [ rule ],
+				packages: [ packageWithMissingComponentRule ],
+			} )
+		).toThrow( /missing compatibility rule missing-component-rule/ );
 	} );
 
 	it( 'creates repositories when all references resolve', () => {
