@@ -1,0 +1,2 @@
+evidence_id,verification_session_id,body_id,vehicle_vin_last8,check_id,measurement_key,filename,archive_locator,captured_at,captured_by,viewpoint,description,sha256,review_status,notes
+,,,,,,,,,,,,,not_reviewed,

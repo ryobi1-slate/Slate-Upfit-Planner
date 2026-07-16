@@ -110,3 +110,12 @@ Only `sprinter-144-high-roof` and `sprinter-170-high-roof` are
 `approved_for_planning`. Planning approval does not authorize installation. The 144
 Standard Roof and 170 Extended High Roof records remain Tier 3 candidates pending an
 approved business need. No candidate record is approved for production.
+
+## High-roof physical verification
+
+The controlled shop procedure and blank worksheets for `sprinter-144-high-roof` and
+`sprinter-170-high-roof` are in `physical-verification/`. These templates do not
+represent completed verification. Runtime PR B remains blocked until both worksheets'
+runtime-enabling subsets contain real evidence-backed measurements and review
+acceptance. Placement-specific PV-007 attachment structure and PV-010 door/rear
+clearance remain production gates after runtime design begins.
