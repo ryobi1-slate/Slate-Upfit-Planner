@@ -50,3 +50,13 @@ placement, SKU, wall, and inch-coordinate identity. Because schema 1.0 did not
 prove engineering revisions, migration sets geometry and catalog revisions to
 unresolved, emits stable warnings, sets `package_origin` to `null`, and adds an
 empty `unplaced_items` list. It never infers approval or mutates its input.
+
+## Candidate geometry release boundary
+
+Documentation under `docs/data-intake/candidate-geometry/` may carry
+`approved_for_planning` when its named source values, controlled applicability limits,
+normalization rules, warnings, unresolved fields, and physical checks are preserved.
+This operational designation is documentation governance only; it does not add a
+runtime schema value or authorize production JSON. Production still requires exact
+VIN/configuration review, final payload review, installer or engineering review, and
+placement-specific physical verification.
