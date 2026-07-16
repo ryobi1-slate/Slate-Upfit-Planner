@@ -30,6 +30,13 @@ Cross-repository integrity validation rejects missing vehicle, geometry,
 product, rule, and package references. Compatibility evaluation and package
 preload are intentionally deferred.
 
+## Vehicle data intake
+
+Reusable engineering evidence and approval templates live under
+[`docs/data-intake/`](./data-intake/README.md). PR B is blocked until the target
+vehicle intake package is complete and approved; the templates do not authorize
+production vehicle JSON or geometry.
+
 ## Geometry revisions
 
 Configurations pin the geometry revision used for fitment. A later geometry
