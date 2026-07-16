@@ -89,3 +89,21 @@ Geometry worksheet rows use one of three mapping states:
 Collection mappings use `data.surfaces[]` and `data.surfaces[].zones[]`. The row's
 `surface_id` and `zone_id` select the intended record. Ad hoc selectors such as
 `[driver_wall]` or `[partition]` are prohibited.
+
+## Candidate geometry planning policy
+
+The candidate-geometry package preserves supplier and OEM values separately, applies
+declared conservative normalization rules, and distinguishes planning authorization
+from production authorization. See:
+
+- `evidence-and-release-policy.md`
+- `sprinter-source-register.csv`
+- `sprinter-geometry-source-comparison.csv`
+- `sprinter-geometry-discrepancies.csv`
+- `sprinter-physical-verification-checklist.csv`
+- `candidate-geometry/`
+
+Only `sprinter-144-high-roof` and `sprinter-170-high-roof` are
+`approved_for_planning`. Planning approval does not authorize installation. The 144
+Standard Roof and 170 Extended High Roof records remain Tier 3 candidates pending an
+approved business need. No candidate record is approved for production.

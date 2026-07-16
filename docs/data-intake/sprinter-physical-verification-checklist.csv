@@ -1,0 +1,11 @@
+check_id,field_id,required_for_planning,required_for_production,verification_scope,evidence_required,status
+PV-001,cargo_front_datum,FALSE,TRUE,Define and photograph the repeatable cargo_front reference plane,Datum description and overview photo,open
+PV-002,actual_partition_rear_face,FALSE,TRUE,Record the installed partition rear face or absence of a partition,Measurement and side/center photos,open
+PV-003,wheel_well_x_start_end,FALSE,TRUE,Measure driver and passenger wheel-well X start and end from cargo_front,Worksheet measurements and side photos,open
+PV-004,sliding_door_x_start_end,FALSE,TRUE,Measure clear sliding-door opening X start and end from cargo_front,Worksheet measurements and open-door photo,open
+PV-005,rear_usable_boundary,FALSE,TRUE,Establish the conservative rear boundary for the selected placement,Measurement and rear-door photo,open
+PV-006,major_no_mount_zones,FALSE,TRUE,Identify only major visible no-mount zones affecting placements,Annotated overview and close-up photos,open
+PV-007,attachment_structure,FALSE,TRUE,Verify structure at actual proposed attachment locations,Installer or engineering review record,open
+PV-008,installed_floor_condition,FALSE,TRUE,Record raw OEM or finished floor and thickness,Condition note and edge photo,open
+PV-009,installed_liner_condition,FALSE,TRUE,Record liner type thickness and mounting impact,Condition note and representative photo,open
+PV-010,placement_specific_door_rear_clearance,FALSE,TRUE,Operate the applicable doors and verify the actual placement envelope,Installer sign-off and clearance photos,open
