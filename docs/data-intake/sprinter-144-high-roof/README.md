@@ -18,4 +18,9 @@ See the repository-level 2026 configuration matrix and source-exception register
 using any SRC-004 value. Every payload row remains configuration-specific and requires
 final VIN verification.
 
+The geometry worksheet's `schema_mapping_status` controls whether a field maps to the
+current schemas. Only `mapped` rows may contain an allow-listed `json_path`.
+`intake_only` and `future_schema_candidate` rows intentionally leave it blank. Candidate
+fields do not authorize runtime schema additions in this PR.
+
 PR B remains blocked until all blocking fields are known, sources are indexed, engineering verification is complete, open exceptions are resolved or accepted, and the package is approved.

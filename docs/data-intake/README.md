@@ -75,3 +75,17 @@ These groups are intake candidates only; none is approved:
 
 RWD and AWD may share a candidate group only after explicit source or physical
 verification. Payload always remains configuration-specific.
+
+## Schema mapping status
+
+Geometry worksheet rows use one of three mapping states:
+
+- `mapped`: `json_path` is nonblank and appears in the Phase 3 schema allow-list.
+- `intake_only`: operational evidence or policy that is not intended for runtime storage;
+  `json_path` must be blank.
+- `future_schema_candidate`: a potential future domain field; `json_path` must be blank
+  until a schema change is approved separately.
+
+Collection mappings use `data.surfaces[]` and `data.surfaces[].zones[]`. The row's
+`surface_id` and `zone_id` select the intended record. Ad hoc selectors such as
+`[driver_wall]` or `[partition]` are prohibited.
