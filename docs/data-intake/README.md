@@ -23,9 +23,12 @@ Use the most authoritative applicable source available:
 Photos support measurements but do not replace source documents or calibrated worksheets.
 
 Large source binaries may remain in an approved external archive when repository policy
-does not permit committing them. The source index must retain the original URL, archive
-filename, retrieval date, publisher, page range, and SHA-256 hash so the reviewed binary
-can be identified exactly.
+does not permit committing them. The source index must retain the original URL when
+known or a stable logical `archive_locator` when the original URL is unavailable, plus
+the archive filename, retrieval date, publisher, page range, and SHA-256 hash so the
+reviewed binary can be identified exactly. Logical locators under
+`slate-engineering-source-archive/` identify the controlled external source package;
+they are not workstation paths or claims about a public download URL.
 
 ## References and derived values
 

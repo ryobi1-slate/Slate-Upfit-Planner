@@ -176,6 +176,8 @@ describe('candidate geometry documentation', () => {
 		for (const row of sourceRows) {
 			expect(allowedEvidenceStates.has(row.evidence_classification)).toBe(true);
 			expect(row.binary_retention).toBe('Retained outside Git');
+			expect(row.original_url || row.archive_locator).toBeTruthy();
+			expect(row.archive_locator).not.toMatch(/^[A-Za-z]:[\\/]/u);
 		}
 		for (const { contents } of candidateDocuments) {
 			const references = metadataValue(contents, 'source_ids').split(/;\s*/u);
