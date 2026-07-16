@@ -121,6 +121,9 @@ const metadataValue = (contents: string, key: string): string => {
 	return (match?.[1] ?? match?.[2] ?? '').trim();
 };
 
+const isAllowedArchiveLocator = (value: string): boolean =>
+	value === '' || !/^(?:[A-Za-z]:[\\/]|\/)/u.test(value);
+
 describe('physical verification documentation', () => {
 	const worksheets = worksheetNames.map((name) => ({
 		name,
@@ -133,7 +136,13 @@ describe('physical verification documentation', () => {
 			.filter((name) => name.endsWith('-worksheet.csv'))
 			.sort();
 		expect(actualNames).toEqual([...worksheetNames].sort());
-		expect(worksheets[0].headers).toEqual(worksheets[1].headers);
+		const firstHeaders = worksheets[0]?.headers;
+		if (!firstHeaders) {
+			throw new Error('No physical-verification worksheets were found');
+		}
+		for (const worksheet of worksheets) {
+			expect(worksheet.headers).toEqual(firstHeaders);
+		}
 		expect(new Set(allRows.map((row) => row.body_id))).toEqual(expectedBodies);
 	});
 
@@ -181,8 +190,13 @@ describe('physical verification documentation', () => {
 	});
 
 	it('preserves controlled candidate references outside physical observations', () => {
-		for (const { rows } of worksheets) {
-			const bodyId = rows[0].body_id;
+		for (const { name, rows } of worksheets) {
+			const bodyId = rows[0]?.body_id;
+			if (!bodyId) {
+				throw new Error(
+					`Physical-verification worksheet ${name} contains no rows or is missing body_id`
+				);
+			}
 			const expected = expectedCandidateReferences[bodyId];
 			const actual = Object.fromEntries(
 				rows
@@ -238,8 +252,21 @@ describe('physical verification documentation', () => {
 			expect(row.evidence_id).toBe('');
 			expect(row.filename).toBe('');
 			expect(row.sha256).toBe('');
-			expect(row.archive_locator).not.toMatch(/^[A-Za-z]:[\\/]/u);
+			expect(isAllowedArchiveLocator(row.archive_locator)).toBe(true);
 		}
+	});
+
+	it('allows blank and logical archive locators but rejects absolute paths', () => {
+		expect(isAllowedArchiveLocator('')).toBe(true);
+		expect(
+			isAllowedArchiveLocator(
+				'slate-engineering-evidence/sprinter-physical-verification/session-id/photo.jpg'
+			)
+		).toBe(true);
+		expect(isAllowedArchiveLocator('C:\\folder\\photo.jpg')).toBe(false);
+		expect(isAllowedArchiveLocator('C:/folder/photo.jpg')).toBe(false);
+		expect(isAllowedArchiveLocator('/home/user/photo.jpg')).toBe(false);
+		expect(isAllowedArchiveLocator('/mnt/evidence/photo.jpg')).toBe(false);
 	});
 
 	it('contains no evidence binaries in the field package', () => {
