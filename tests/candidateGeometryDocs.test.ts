@@ -1,19 +1,16 @@
 import { describe, expect, it } from '@jest/globals';
-
-declare const require: (moduleName: string) => unknown;
-
-const { readFileSync, readdirSync } = require('fs') as {
-	readFileSync: (path: string, encoding: string) => string;
-	readdirSync: {
-		(path: string): string[];
-		(path: string, options: { recursive: true }): string[];
-	};
-};
+import { readFileSync, readdirSync } from 'fs';
 
 type CsvRow = Record<string, string>;
 
 const root = 'docs/data-intake';
 const candidateDirectory = `${root}/candidate-geometry`;
+const sourceValueColumns = [
+	'westcan_value',
+	'sterling_value',
+	'upfit_supply_value',
+	'mercedes_oem_value',
+];
 const requiredWarnings = [
 	'Candidate geometry',
 	'Verify before production',
@@ -110,6 +107,14 @@ const validateComparison = (rows: CsvRow[]): string[] => {
 		if (normalized !== null && row.evidence_state === 'published') {
 			errors.push(`normalized value labeled published: ${row.body_id}/${row.field_id}`);
 		}
+		if (
+			row.normalization_rule === 'single_source_candidate' &&
+			!sourceValueColumns.some(
+				(column) => row[column] !== '' && Number(row[column]) === normalized
+			)
+		) {
+			errors.push(`candidate value is not a preserved source value: ${row.body_id}/${row.field_id}`);
+		}
 
 		let expected = normalized;
 		switch (row.normalization_rule) {
@@ -141,6 +146,7 @@ const validateComparison = (rows: CsvRow[]): string[] => {
 describe('candidate geometry documentation', () => {
 	const sourceRows = parseCsv(`${root}/sprinter-source-register.csv`);
 	const comparisonRows = parseCsv(`${root}/sprinter-geometry-source-comparison.csv`);
+	const discrepancyRows = parseCsv(`${root}/sprinter-geometry-discrepancies.csv`);
 	const existingSourceRows = parseCsv(`${root}/sprinter-144-high-roof/source-index.csv`);
 	const candidateFiles = readdirSync(candidateDirectory).filter((file) =>
 		file.endsWith('.md')
@@ -181,10 +187,60 @@ describe('candidate geometry documentation', () => {
 
 	it('enforces conservative comparison values', () => {
 		expect(comparisonRows).toHaveLength(72);
+		const comparisonIds = comparisonRows.map(
+			(row) => `${row.body_id}/${row.field_id}`
+		);
+		expect(new Set(comparisonIds).size).toBe(comparisonIds.length);
 		expect(validateComparison(comparisonRows)).toEqual([]);
 	});
 
+	it('references every fitment-material discrepancy from applicable records', () => {
+		for (const discrepancy of discrepancyRows.filter(
+			(row) => row.category === 'fitment_material'
+		)) {
+			for (const bodyId of discrepancy.body_ids.split(';')) {
+				const document = candidateDocuments.find(
+					({ contents }) => metadataValue(contents, 'body_id') === bodyId
+				);
+				expect(document?.contents).toContain(discrepancy.discrepancy_id);
+			}
+		}
+	});
+
+	it('keeps candidate-record dimensions synchronized with the comparison matrix', () => {
+		for (const { contents } of candidateDocuments) {
+			const bodyId = metadataValue(contents, 'body_id');
+			const tableRows = [...contents.matchAll(
+				/^\| `([^`]+)` \| ([^|]+?) \| `([^`]+)` \|/gmu
+			)];
+			expect(tableRows.length).toBeGreaterThan(0);
+
+			for (const [, recordField, recordValue, recordRule] of tableRows) {
+				const fieldId =
+					recordField === 'partition_intrusion'
+						? 'partition_depth_or_zone'
+						: recordField;
+				const comparison = comparisonRows.find(
+					(row) => row.body_id === bodyId && row.field_id === fieldId
+				);
+				expect(comparison).toBeDefined();
+				expect(recordValue.trim()).toBe(
+					comparison?.normalized_planning_value || 'unresolved'
+				);
+				expect(recordRule).toBe(comparison?.normalization_rule);
+			}
+		}
+	});
+
 	it('requires planning warnings and prohibits production approval', () => {
+		expect(candidateDocuments).toHaveLength(4);
+		expect(
+			candidateDocuments.filter(
+				({ contents }) =>
+					metadataValue(contents, 'operational_approval_level') ===
+					'approved_for_planning'
+			)
+		).toHaveLength(2);
 		for (const { contents } of candidateDocuments) {
 			const approval = metadataValue(contents, 'operational_approval_level');
 			expect(approval).not.toBe('approved_for_production');
@@ -206,7 +262,7 @@ describe('candidate geometry documentation', () => {
 	});
 
 	it('does not place source PDF binaries in the repository', () => {
-		const pdfFiles = readdirSync('.', { recursive: true }).filter((path) =>
+		const pdfFiles = readdirSync('.', { recursive: true, encoding: 'utf8' }).filter((path) =>
 			path.toLowerCase().endsWith('.pdf')
 		);
 		expect(pdfFiles).toEqual([]);
@@ -219,7 +275,7 @@ describe('candidate geometry documentation', () => {
 		expect(validateComparison(changedRows)).toEqual(
 			expect.arrayContaining([
 				expect.stringContaining('normalized value outside range'),
-				expect.stringContaining('normalization rule mismatch'),
+				expect.stringContaining('candidate value is not a preserved source value'),
 			])
 		);
 	});
