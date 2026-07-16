@@ -1,0 +1,13 @@
+priority_tier,model_year,wheelbase_in,body_variant,roof_height,drivetrain,chassis_variant,identity_status,geometry_status,payload_status,approval_status,geometry_sharing_candidate_group,notes
+1,2026,144,cargo_van,high,RWD,2500,published,draft_candidate,published_draft,draft,144-high-roof-single-rear-wheel,Primary commercial baseline
+1,2026,170,cargo_van,high,RWD,2500,published,draft_candidate,published_draft,draft,170-high-roof-single-rear-wheel,Primary commercial baseline
+1,2027,144,cargo_van,high,RWD,2500,future_pending,future_pending,not_created,draft,144-high-roof-single-rear-wheel,Requires evidence or approved carryover policy
+1,2027,170,cargo_van,high,RWD,2500,future_pending,future_pending,not_created,draft,170-high-roof-single-rear-wheel,Requires evidence or approved carryover policy
+2,2026,144,cargo_van,high,AWD,2500,published,draft_candidate,published_draft,draft,144-high-roof-single-rear-wheel,Secondary supported configuration; sharing not approved
+2,2026,170,cargo_van,high,AWD,2500,published,draft_candidate,published_draft,draft,170-high-roof-single-rear-wheel,Secondary supported configuration; sharing not approved
+2,2027,144,cargo_van,high,AWD,2500,future_pending,future_pending,not_created,draft,144-high-roof-single-rear-wheel,Requires evidence or approved carryover policy
+2,2027,170,cargo_van,high,AWD,2500,future_pending,future_pending,not_created,draft,170-high-roof-single-rear-wheel,Requires evidence or approved carryover policy
+3,2026,144,cargo_van,standard,RWD_or_AWD,2500_to_4500,published,draft_candidate,published_draft,draft,144-standard-roof-single-or-dual-rear-wheel,Active-business need and exception review required
+3,2026,144,cargo_van,high,RWD_or_AWD,3500_to_4500,published,draft_candidate,published_draft,draft,144-high-roof-dual-rear-wheel,Chassis-specific evidence required
+3,2026,170,cargo_van,high,RWD_or_AWD,3500_to_4500,published,draft_candidate,published_draft,draft,170-high-roof-dual-rear-wheel,Chassis-specific evidence required
+3,2026,170_extended,cargo_van,high,RWD_or_AWD,2500_to_4500,published,draft_candidate,published_draft,draft,170-extended-high-roof-single-or-dual-rear-wheel,Do not infer absent configurations

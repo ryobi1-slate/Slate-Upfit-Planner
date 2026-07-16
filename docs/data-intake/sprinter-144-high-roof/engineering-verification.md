@@ -14,10 +14,20 @@ Source package revision: ____________________
 - [ ] Tolerances confirmed
 - [ ] Rounding policy confirmed
 - [ ] Payload applicability reviewed
+- [ ] Configuration matrix row reviewed
+- [ ] Payload record matches exact model year, body, drivetrain, chassis, and engine output
+- [ ] SRC-004 published summary values preserved without normalization
+- [ ] All referenced exception IDs reviewed
+- [ ] Candidate geometry-sharing group independently supported
+- [ ] Final VIN verification requirement recorded
 
 ## Open exceptions
 
 ______________________________________________________________________________
+
+Exception register revision: ____________________
+
+Unresolved exception IDs: ____________________
 
 ## Verification decision
 

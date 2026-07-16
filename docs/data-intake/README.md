@@ -22,6 +22,11 @@ Use the most authoritative applicable source available:
 
 Photos support measurements but do not replace source documents or calibrated worksheets.
 
+Large source binaries may remain in an approved external archive when repository policy
+does not permit committing them. The source index must retain the original URL, archive
+filename, retrieval date, publisher, page range, and SHA-256 hash so the reviewed binary
+can be identified exactly.
+
 ## References and derived values
 
 Reference every fact as:
@@ -29,6 +34,9 @@ Reference every fact as:
 `<filename> | PDF p.<number> | printed p.<number-or-N/A> | § <section> | table/figure <identifier-or-N/A>`
 
 Derived values must identify all source fields, include a reproducible formula, retain the source precision, and be independently verified. A derived value cannot have a stronger approval state than its inputs.
+
+Published OEM summary values, conflicting detail values, Slate-normalized values, and
+final approved values remain separate. Source exceptions are never corrected in place.
 
 ## Approval workflow
 
@@ -46,3 +54,24 @@ Use lowercase kebab-case directories for vehicle families and stable descriptive
 ## No guesses
 
 Never infer a measurement, payload, applicability range, citation, or approval. Unknown numeric values remain blank during intake and become `null`, not zero, in records that support pending values.
+
+Payload is configuration-specific even when multiple configurations are candidates to
+share one geometry group. Future 2027 payload proposals use
+`assumed_model_year_carryover`, remain draft, and require published or VIN-specific
+confirmation before final approval.
+
+## Candidate geometry-sharing groups
+
+These groups are intake candidates only; none is approved:
+
+1. `144-standard-roof-single-rear-wheel`
+2. `144-standard-roof-dual-rear-wheel`
+3. `144-high-roof-single-rear-wheel`
+4. `144-high-roof-dual-rear-wheel`
+5. `170-high-roof-single-rear-wheel`
+6. `170-high-roof-dual-rear-wheel`
+7. `170-extended-high-roof-single-rear-wheel`
+8. `170-extended-high-roof-dual-rear-wheel`
+
+RWD and AWD may share a candidate group only after explicit source or physical
+verification. Payload always remains configuration-specific.

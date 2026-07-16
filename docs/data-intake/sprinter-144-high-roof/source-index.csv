@@ -1,4 +1,2 @@
-source_id,filename,document_title,document_type,publisher,revision,publication_date,retrieved_on,pdf_page,printed_page,section,table_or_figure,applicable_model_years,applicable_chassis,applicable_drivetrain,applicable_gvwr,primary_or_supporting,notes
-,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,
+source_id,filename,original_source_url,document_title,document_type,publisher,revision,publication_date,retrieved_on,pdf_page,printed_page,section,table_or_figure,applicable_model_years,applicable_bodies,applicable_chassis,applicable_drivetrain,applicable_gvwr,primary_or_supporting,sha256,binary_retention,notes
+SRC-004,2026 Sprinter Specs.pdf,https://www.mbvans.com/en/sprinter/cargo-van#lineup,2026 Cargo Van | Sprinter | Mercedes-Benz Vans,OEM web lineup PDF capture,Mercedes-Benz Vans,,,2026-07-16,2-87,N/A,Cargo Van Lineup,Configuration detail,2026,"144 Standard Roof; 144 High Roof; 170 High Roof; 170 Extended High Roof","2500; 3500; 3500XD; 4500","RWD; AWD where published","9050; 9990; 11030; 12125",primary,89FB169D73027E18F8374B758B2A4806B05BC4ABA00298F4B233D7114CB69932,Retained outside Git repository,"Preserve published values; review E001-E016 before verification or approval."

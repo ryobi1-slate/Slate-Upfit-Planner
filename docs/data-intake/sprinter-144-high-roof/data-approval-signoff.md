@@ -12,10 +12,19 @@
 | `approved_by` | |
 | `last_verified` | |
 | `payload_policy` | |
+| `payload_record_id` | |
+| `final_vin_verification` | |
+| `configuration_matrix_revision` | |
+| `source_exception_register_revision` | |
+| `geometry_sharing_candidate_group` | |
+| `geometry_sharing_approved` | |
 | `rounding_policy` | |
 | `open_exceptions` | |
 
 Production-selectable records require `approval_state: approved`.
+
+Candidate geometry sharing is not approval. Payload approval remains specific to the
+exact model year, body, drivetrain, chassis, engine output, and verified VIN evidence.
 
 ## Approval decision
 
