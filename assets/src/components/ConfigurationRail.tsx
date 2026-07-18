@@ -5,6 +5,7 @@
  */
 
 import { usePlanner } from '../hooks/usePlanner';
+import { VEHICLES } from '../data/geometry';
 import type { WallId } from '../types';
 
 export function ConfigurationRail() {
@@ -12,6 +13,7 @@ export function ConfigurationRail() {
 		state,
 		catalog,
 		remainingOnActiveWall,
+		selectVehicle,
 		selectProduct,
 		switchWall,
 		placeSelected,
@@ -23,10 +25,37 @@ export function ConfigurationRail() {
 		<aside className="sup-rail" aria-label="Configuration">
 			<section className="sup-panel">
 				<h2 className="sup-panel__title">Vehicle</h2>
+				<label className="sup-field" htmlFor="sup-vehicle-selector">
+					<span className="sup-field__label">
+						Vehicle configuration
+					</span>
+					<select
+						id="sup-vehicle-selector"
+						className="sup-vehicle-selector"
+						value={ vehicle.id }
+						onChange={ ( event ) => {
+							const nextVehicle = VEHICLES.find(
+								( option ) =>
+									option.id === event.currentTarget.value
+							);
+							if ( nextVehicle ) {
+								selectVehicle( nextVehicle );
+							}
+						} }
+					>
+						{ VEHICLES.map( ( option ) => (
+							<option key={ option.id } value={ option.id }>
+								{ option.name }
+							</option>
+						) ) }
+					</select>
+				</label>
 				<p className="sup-panel__hint">
 					{ vehicle.name } · { vehicle.length }&quot; ×{ ' ' }
-					{ vehicle.width }&quot; · { vehicle.payloadCapacity } lb
-					payload
+					{ vehicle.width }&quot; ·{ ' ' }
+					{ vehicle.payloadRequiresVin
+						? 'VIN required for payload capacity'
+						: `${ vehicle.payloadCapacity } lb payload` }
 				</p>
 
 				<div className="sup-field">

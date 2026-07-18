@@ -30,6 +30,10 @@ export function App() {
 		>
 			<div className="sup-shell">
 				<TopNav mode={ ctx.mode } />
+				<div className="sup-planning-warning" role="status">
+					Planning geometry only — production use is not authorized.
+					VIN payload is required.
+				</div>
 				<div className="sup-body">
 					<ConfigurationRail />
 					<CanvasWorkspace />

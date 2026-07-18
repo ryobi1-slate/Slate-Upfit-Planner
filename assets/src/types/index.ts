@@ -107,6 +107,8 @@ export interface VehicleGeometry {
 	width: Inches;
 	/** Chassis payload capacity, pounds (remaining capacity over curb weight). */
 	payloadCapacity: Pounds;
+	/** True when the displayed chassis capacity must be confirmed from the VIN. */
+	payloadRequiresVin?: boolean;
 	walls: WallGeometry[];
 }
 

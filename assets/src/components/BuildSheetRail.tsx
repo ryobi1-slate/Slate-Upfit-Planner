@@ -73,30 +73,42 @@ export function BuildSheetRail() {
 						{ payload.componentWeight } lb
 					</span>
 				</div>
-				<div className="sup-stat">
-					<span className="sup-stat__label">Chassis capacity</span>
-					<span className="sup-stat__value">
-						{ payload.capacity } lb
-					</span>
-				</div>
-				<div className="sup-stat">
-					<span className="sup-stat__label">Remaining</span>
-					<span
-						className={
-							'sup-stat__value' +
-							( payload.overCapacity
-								? ' sup-stat__value--bad'
-								: '' )
-						}
-					>
-						{ payload.remaining } lb
-					</span>
-				</div>
-				{ payload.overCapacity && (
-					<p className="sup-issue sup-issue--error">
-						Over payload — chassis upgrade required.
+				{ state.vehicle.payloadRequiresVin ? (
+					<p className="sup-issue sup-issue--warning">
+						VIN required to display chassis capacity and remaining
+						payload.
 					</p>
+				) : (
+					<>
+						<div className="sup-stat">
+							<span className="sup-stat__label">
+								Chassis capacity
+							</span>
+							<span className="sup-stat__value">
+								{ payload.capacity } lb
+							</span>
+						</div>
+						<div className="sup-stat">
+							<span className="sup-stat__label">Remaining</span>
+							<span
+								className={
+									'sup-stat__value' +
+									( payload.overCapacity
+										? ' sup-stat__value--bad'
+										: '' )
+								}
+							>
+								{ payload.remaining } lb
+							</span>
+						</div>
+					</>
 				) }
+				{ ! state.vehicle.payloadRequiresVin &&
+					payload.overCapacity && (
+						<p className="sup-issue sup-issue--error">
+							Over payload — chassis upgrade required.
+						</p>
+					) }
 			</section>
 		</aside>
 	);

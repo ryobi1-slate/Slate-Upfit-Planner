@@ -47,6 +47,12 @@ export function usePlanner() {
 		[ dispatch ]
 	);
 
+	const selectVehicle = useCallback(
+		( nextVehicle: typeof vehicle ) =>
+			dispatch( actions.selectVehicle( nextVehicle ) ),
+		[ dispatch ]
+	);
+
 	const switchWall = useCallback(
 		( wall: WallId ) => dispatch( actions.switchWall( wall ) ),
 		[ dispatch ]
@@ -217,6 +223,7 @@ export function usePlanner() {
 		activeWallGeometry,
 		issues,
 		remainingOnActiveWall,
+		selectVehicle,
 		selectProduct,
 		switchWall,
 		selectPlacement,

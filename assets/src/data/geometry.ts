@@ -1,6 +1,6 @@
 /**
  * Version-controlled vehicle geometry for the Phase 2 production slice:
- * Mercedes Sprinter 144" WB (Standard + High Roof).
+ * Mercedes Sprinter High Roof (144" + 170" wheelbases).
  *
  * Source of truth: Westcan "Mercedes Sprinter + Metris Aluminum Product Guide"
  * zone letters (A..L), resolved to along-wall inch spans here. Numbers are
@@ -94,7 +94,38 @@ export const SPRINTER_144_HR: VehicleGeometry = {
 	length: 124,
 	width: 61,
 	payloadCapacity: 4211,
+	payloadRequiresVin: true,
 	walls: [ driverWall( 124, 107 ), passengerWall( 124, 107 ) ],
+};
+
+/**
+ * Sprinter 170" WB High Roof. Westcan's 156.875" available cargo run is
+ * rounded to 157" and combined with the existing 8" partition reserve. The
+ * 51.75" door, 37.3125" pre-wheel run, 36.5" wheel well, and 31.3125" rear
+ * run are rounded to the whole-inch runtime grid used by this module.
+ */
+export const SPRINTER_170_HR: VehicleGeometry = {
+	id: 'sprinter-170-hr',
+	name: 'Sprinter · 170" WB High Roof',
+	roof: 'high',
+	wheelbase: '170"',
+	length: 165,
+	width: 61,
+	payloadCapacity: 4211,
+	payloadRequiresVin: true,
+	walls: [ driverWall( 165, 133 ), passengerWall( 165, 133 ) ].map(
+		( wall ) => ( {
+			...wall,
+			wheelWells: wall.wheelWells.map( ( well ) => ( {
+				...well,
+				from: 96,
+			} ) ),
+			doorZones:
+				wall.wall === 'passenger'
+					? [ { from: 8, to: 60, reason: 'Sliding door opening' } ]
+					: [],
+		} )
+	),
 };
 
 /** Sprinter 144" WB Standard Roof (same walls; taller shelves don't fit). */
@@ -110,10 +141,7 @@ export const SPRINTER_144_STD: VehicleGeometry = {
 };
 
 /** All Phase 2 vehicles. Default is the High Roof. */
-export const VEHICLES: VehicleGeometry[] = [
-	SPRINTER_144_HR,
-	SPRINTER_144_STD,
-];
+export const VEHICLES: VehicleGeometry[] = [ SPRINTER_144_HR, SPRINTER_170_HR ];
 
 /**
  * Resolve a wall's geometry by id.
