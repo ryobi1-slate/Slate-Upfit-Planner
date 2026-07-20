@@ -133,7 +133,10 @@ export const SPRINTER_170_HR: VehicleGeometry = {
 export const VEHICLES: VehicleGeometry[] = [ SPRINTER_144_HR, SPRINTER_170_HR ];
 
 export function getVehicle( vehicleId: string ): VehicleGeometry | undefined {
-	return VEHICLES.find( ( vehicle ) => vehicle.id === vehicleId );
+	const canonicalId =
+		vehicleId === 'sprinter-144-hr' ? 'sprinter-144-high-roof' : vehicleId;
+
+	return VEHICLES.find( ( vehicle ) => vehicle.id === canonicalId );
 }
 
 /**

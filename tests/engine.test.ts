@@ -75,6 +75,10 @@ describe( 'runtime vehicle registry', () => {
 		expect( getVehicle( 'sprinter-170-extended-high-roof' ) ).toBeUndefined();
 	} );
 
+	it( 'maps the explicit legacy 144 ID to canonical runtime geometry', () => {
+		expect( getVehicle( 'sprinter-144-hr' ) ).toBe( SPRINTER_144_HR );
+	} );
+
 	it( 'exports the exact planning warning', () => {
 		expect( PLANNING_GEOMETRY_WARNING ).toBe(
 			'Planning dimensions — verify final fitment before installation.'
@@ -458,6 +462,123 @@ describe( 'vehicle selection', () => {
 } );
 
 describe( 'reducer load configuration', () => {
+	it( 'restores canonical 170 geometry, placements, wall, and payload identity', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_144_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+			activeWall: 'driver',
+		} );
+		const loaded = [ place( 'placement-1', '22-3438', 'passenger', 62 ) ];
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-170',
+			vehicle: SPRINTER_170_HR,
+			activeWall: 'passenger',
+			placements: loaded,
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, loaded )
+		);
+		const normalized = buildNormalizedPayload( {
+			configurationId: next.configurationId,
+			vehicle: next.vehicle,
+			activeWall: next.activeWall,
+			placements: next.placements,
+			componentsBySku: next.componentsBySku,
+		} );
+
+		expect( next.vehicle ).toBe( SPRINTER_170_HR );
+		expect( next.vehicle.length ).toBe( 164 );
+		expect( next.placements ).toEqual( loaded );
+		expect( next.activeWall ).toBe( 'passenger' );
+		expect( normalized.vehicle.id ).toBe( 'sprinter-170-high-roof' );
+		expect( normalized.vehicle.wheelbase ).toBe( '170"' );
+	} );
+
+	it( 'restores canonical 144 geometry into a 170 state', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_170_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+		} );
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-144',
+			vehicle: SPRINTER_144_HR,
+			activeWall: 'driver',
+			placements: [],
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, [] )
+		);
+
+		expect( next.vehicle ).toBe( SPRINTER_144_HR );
+	} );
+
+	it( 'normalizes the legacy 144 vehicle ID on load', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_170_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+		} );
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-legacy-144',
+			vehicle: SPRINTER_144_HR,
+			activeWall: 'driver',
+			placements: [],
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+		payload.vehicle.id = 'sprinter-144-hr';
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, [] )
+		);
+		const normalized = buildNormalizedPayload( {
+			configurationId: next.configurationId,
+			vehicle: next.vehicle,
+			activeWall: next.activeWall,
+			placements: next.placements,
+			componentsBySku: next.componentsBySku,
+		} );
+
+		expect( next.vehicle ).toBe( SPRINTER_144_HR );
+		expect( normalized.vehicle.id ).toBe( 'sprinter-144-high-roof' );
+	} );
+
+	it( 'retains the current vehicle for an unknown ID and restores placements', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_170_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+			activeWall: 'passenger',
+		} );
+		const loaded = [ place( 'placement-1', '22-3438', 'driver', 12 ) ];
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-unknown',
+			vehicle: SPRINTER_144_HR,
+			activeWall: 'driver',
+			placements: loaded,
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+		payload.vehicle.id = 'unknown-vehicle';
+		( payload.vehicle as { wall: string } ).wall = 'rear';
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, loaded )
+		);
+
+		expect( next.vehicle ).toBe( SPRINTER_170_HR );
+		expect( next.placements ).toEqual( loaded );
+		expect( next.activeWall ).toBe( 'passenger' );
+	} );
+
 	it( 'restores placements and mints non-colliding ids afterward', () => {
 		let state = initPlannerState( {
 			vehicle,

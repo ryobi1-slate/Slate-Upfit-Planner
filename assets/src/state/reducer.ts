@@ -10,6 +10,7 @@ import type {
 	VehicleGeometry,
 	WallId,
 } from '../types';
+import { getVehicle } from '../data/geometry';
 import type { PlannerAction, Position } from './actions';
 
 /**
@@ -152,16 +153,26 @@ export function plannerReducer(
 			};
 
 		case 'LOAD_CONFIGURATION': {
-			// Sanitize the restored wall: a legacy/unknown id (e.g. a Phase 1
-			// 'rear'/'floor'/'ceiling') would resolve to no geometry and blank
-			// the canvas, so fall back to the current wall.
+			// Unknown vehicle ids retain the current vehicle rather than guessing
+			// a body geometry. Supported ids (including explicit legacy aliases)
+			// restore their canonical runtime vehicle with the saved placements.
+			const loadedVehicle =
+				getVehicle( action.payload.vehicle.id ) ?? state.vehicle;
+			// Sanitize the restored wall against the loaded vehicle. A legacy or
+			// unknown wall would resolve to no geometry and blank the canvas, so
+			// retain the current active wall.
 			const loadedWall = action.payload.vehicle.wall;
 			return {
 				...state,
+				vehicle: loadedVehicle,
 				configurationId: action.payload.configuration_id,
-				activeWall: isValidWall( loadedWall )
-					? loadedWall
-					: state.activeWall,
+				activeWall:
+					isValidWall( loadedWall ) &&
+					loadedVehicle.walls.some(
+						( wall ) => wall.wall === loadedWall
+					)
+						? loadedWall
+						: state.activeWall,
 				placements: action.placements,
 				dealerNotes: action.payload.dealer_notes,
 				preview: null,
