@@ -17,15 +17,22 @@ import {
 	getRemainingWallLength,
 	validateConfiguration,
 } from '../engine';
-import { getWall } from '../data/geometry';
+import { getVehicle, getWall, VEHICLES } from '../data/geometry';
 import type {
 	ConfigurationPayload,
 	FitmentResult,
 	Inches,
 	Placement,
+	VehicleGeometry,
 	WallGeometry,
 	WallId,
 } from '../types';
+
+export function resolveSupportedVehicle(
+	vehicleId: string
+): VehicleGeometry | undefined {
+	return getVehicle( vehicleId );
+}
 
 export function usePlanner() {
 	const { state, dispatch, totals } = usePlannerContext();
@@ -48,8 +55,12 @@ export function usePlanner() {
 	);
 
 	const selectVehicle = useCallback(
-		( nextVehicle: typeof vehicle ) =>
-			dispatch( actions.selectVehicle( nextVehicle ) ),
+		( vehicleId: string ) => {
+			const nextVehicle = resolveSupportedVehicle( vehicleId );
+			if ( nextVehicle ) {
+				dispatch( actions.selectVehicle( nextVehicle ) );
+			}
+		},
 		[ dispatch ]
 	);
 
@@ -220,6 +231,7 @@ export function usePlanner() {
 		state,
 		totals,
 		catalog,
+		supportedVehicles: VEHICLES,
 		activeWallGeometry,
 		issues,
 		remainingOnActiveWall,

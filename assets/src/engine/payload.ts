@@ -45,15 +45,18 @@ export function calculatePayload(
 		}
 	}
 
-	// payloadCapacity is the weight the chassis can carry over curb weight, so
-	// remaining payload is capacity minus placed component weight.
-	const remaining = vehicle.payloadCapacity - componentWeight;
+	// A null capacity is intentionally unknown until a VIN-specific value is
+	// available. Never substitute zero or calculate a false remaining payload.
+	const remaining =
+		vehicle.payloadCapacity === null
+			? null
+			: vehicle.payloadCapacity - componentWeight;
 
 	return {
 		componentWeight,
 		capacity: vehicle.payloadCapacity,
 		remaining,
-		overCapacity: remaining < 0,
+		overCapacity: remaining !== null && remaining < 0,
 		driverWeight,
 		passengerWeight,
 	};

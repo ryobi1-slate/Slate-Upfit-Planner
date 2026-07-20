@@ -5,13 +5,14 @@
  */
 
 import { usePlanner } from '../hooks/usePlanner';
-import { VEHICLES } from '../data/geometry';
+import { PLANNING_GEOMETRY_WARNING } from '../data/geometry';
 import type { WallId } from '../types';
 
 export function ConfigurationRail() {
 	const {
 		state,
 		catalog,
+		supportedVehicles,
 		remainingOnActiveWall,
 		selectVehicle,
 		selectProduct,
@@ -33,17 +34,11 @@ export function ConfigurationRail() {
 						id="sup-vehicle-selector"
 						className="sup-vehicle-selector"
 						value={ vehicle.id }
-						onChange={ ( event ) => {
-							const nextVehicle = VEHICLES.find(
-								( option ) =>
-									option.id === event.currentTarget.value
-							);
-							if ( nextVehicle ) {
-								selectVehicle( nextVehicle );
-							}
-						} }
+						onChange={ ( event ) =>
+							selectVehicle( event.currentTarget.value )
+						}
 					>
-						{ VEHICLES.map( ( option ) => (
+						{ supportedVehicles.map( ( option ) => (
 							<option key={ option.id } value={ option.id }>
 								{ option.name }
 							</option>
@@ -51,11 +46,17 @@ export function ConfigurationRail() {
 					</select>
 				</label>
 				<p className="sup-panel__hint">
+					Changing vehicles clears the current layout.
+				</p>
+				<p className="sup-panel__hint">
 					{ vehicle.name } · { vehicle.length }&quot; ×{ ' ' }
 					{ vehicle.width }&quot; ·{ ' ' }
-					{ vehicle.payloadRequiresVin
-						? 'VIN required for payload capacity'
+					{ vehicle.payloadCapacity === null
+						? 'Payload requires VIN'
 						: `${ vehicle.payloadCapacity } lb payload` }
+				</p>
+				<p className="sup-planning-warning">
+					{ PLANNING_GEOMETRY_WARNING }
 				</p>
 
 				<div className="sup-field">

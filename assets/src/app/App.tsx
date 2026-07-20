@@ -2,9 +2,8 @@
  * Product shell composition: top nav + three-column body
  * (configuration rail · canvas workspace · build-sheet rail).
  *
- * Phase 2 renders the Stitch shell with the real interactive driver/passenger
- * wall canvas and fitment engine, against the fixed Westcan shelf catalog and
- * Sprinter 144 geometry.
+ * The planning runtime supports Sprinter 144 and 170 High Roof geometry while
+ * retaining the existing driver/passenger wall canvas and fitment engine.
  */
 
 import { PlannerProvider } from '../state/context';
@@ -30,10 +29,6 @@ export function App() {
 		>
 			<div className="sup-shell">
 				<TopNav mode={ ctx.mode } />
-				<div className="sup-planning-warning" role="status">
-					Planning geometry only — production use is not authorized.
-					VIN payload is required.
-				</div>
 				<div className="sup-body">
 					<ConfigurationRail />
 					<CanvasWorkspace />

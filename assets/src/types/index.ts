@@ -105,10 +105,8 @@ export interface VehicleGeometry {
 	length: Inches;
 	/** Interior width side-to-side, inches. */
 	width: Inches;
-	/** Chassis payload capacity, pounds (remaining capacity over curb weight). */
-	payloadCapacity: Pounds;
-	/** True when the displayed chassis capacity must be confirmed from the VIN. */
-	payloadRequiresVin?: boolean;
+	/** Chassis payload capacity, or null until VIN-specific capacity is known. */
+	payloadCapacity: Pounds | null;
 	walls: WallGeometry[];
 }
 
@@ -200,8 +198,8 @@ export interface WallUsage {
 /** Payload roll-up for the whole build. */
 export interface PayloadSummary {
 	componentWeight: Pounds;
-	capacity: Pounds;
-	remaining: Pounds;
+	capacity: Pounds | null;
+	remaining: Pounds | null;
 	overCapacity: boolean;
 	driverWeight: Pounds;
 	passengerWeight: Pounds;

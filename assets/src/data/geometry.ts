@@ -1,16 +1,15 @@
 /**
- * Version-controlled vehicle geometry for the Phase 2 production slice:
+ * Version-controlled vehicle geometry for the planning runtime:
  * Mercedes Sprinter High Roof (144" + 170" wheelbases).
  *
  * Source of truth: Westcan "Mercedes Sprinter + Metris Aluminum Product Guide"
  * zone letters (A..L), resolved to along-wall inch spans here. Numbers are
- * derived from the reference `mkVan()` for the 144" chassis with the 2500/RWD
- * chassis (payload 4211 lb, wheelhouse width 53").
+ * based on one internally consistent Westcan zone model per vehicle.
  *
  *   H  partition zone (front reserve)      = 7.5"  → 8"
  *   B  van depth (interior width)          = 61.125" → 61"
- *   I  available cargo (partition→rear)     ≈ 116.4" (HR) / 117.1" (STD)
- *   K  partition→wheel-well                 = 63.1" (HR) / 63.6" (STD)
+ *   I  available cargo (partition→rear)     ≈ 116.4" (144 HR)
+ *   K  partition→wheel-well                 = 63.1" (144 HR)
  *   E  wheel-well length                    = 36.5"
  *   G  side (sliding) door opening          = 51.75" → 52"
  *   L  contoured partition inset (passenger)= 12.125" → 12", 5" stay-clear
@@ -26,12 +25,20 @@ import type { VehicleGeometry, WallGeometry, WallId } from '../types';
 /** Wheel-well intrusion depth: (width − wheelhouseWidth)/2 for 2500 = ~4". */
 const WHEEL_DEPTH = 4;
 
+export const PLANNING_GEOMETRY_WARNING =
+	'Planning dimensions — verify final fitment before installation.';
+
 /**
  * Driver wall — partition reserve + wheel well, no side door.
  * @param length
+ * @param wheelWellFrom
  * @param wheelWellTo
  */
-function driverWall( length: number, wheelWellTo: number ): WallGeometry {
+function driverWall(
+	length: number,
+	wheelWellFrom: number,
+	wheelWellTo: number
+): WallGeometry {
 	return {
 		wall: 'driver',
 		label: 'Driver Wall',
@@ -43,7 +50,7 @@ function driverWall( length: number, wheelWellTo: number ): WallGeometry {
 		doorZones: [],
 		wheelWells: [
 			{
-				from: 71,
+				from: wheelWellFrom,
 				to: wheelWellTo,
 				depth: WHEEL_DEPTH,
 				reason: 'Wheel well',
@@ -55,9 +62,14 @@ function driverWall( length: number, wheelWellTo: number ): WallGeometry {
 /**
  * Passenger (curb) wall — partition + contoured inset + sliding door + well.
  * @param length
+ * @param wheelWellFrom
  * @param wheelWellTo
  */
-function passengerWall( length: number, wheelWellTo: number ): WallGeometry {
+function passengerWall(
+	length: number,
+	wheelWellFrom: number,
+	wheelWellTo: number
+): WallGeometry {
 	return {
 		wall: 'passenger',
 		label: 'Passenger Wall',
@@ -76,7 +88,7 @@ function passengerWall( length: number, wheelWellTo: number ): WallGeometry {
 		doorZones: [ { from: 8, to: 60, reason: 'Sliding door opening' } ],
 		wheelWells: [
 			{
-				from: 71,
+				from: wheelWellFrom,
 				to: wheelWellTo,
 				depth: WHEEL_DEPTH,
 				reason: 'Wheel well',
@@ -87,61 +99,42 @@ function passengerWall( length: number, wheelWellTo: number ): WallGeometry {
 
 /** Sprinter 144" WB High Roof (default demo vehicle). */
 export const SPRINTER_144_HR: VehicleGeometry = {
-	id: 'sprinter-144-hr',
+	id: 'sprinter-144-high-roof',
 	name: 'Sprinter · 144" WB High Roof',
 	roof: 'high',
 	wheelbase: '144"',
 	length: 124,
 	width: 61,
-	payloadCapacity: 4211,
-	payloadRequiresVin: true,
-	walls: [ driverWall( 124, 107 ), passengerWall( 124, 107 ) ],
+	payloadCapacity: null,
+	walls: [ driverWall( 124, 71, 107 ), passengerWall( 124, 71, 107 ) ],
 };
 
 /**
- * Sprinter 170" WB High Roof. Westcan's 156.875" available cargo run is
- * rounded to 157" and combined with the existing 8" partition reserve. The
- * 51.75" door, 37.3125" pre-wheel run, 36.5" wheel well, and 31.3125" rear
- * run are rounded to the whole-inch runtime grid used by this module.
+ * Sprinter 170" WB High Roof. Exact Westcan values retained for provenance:
+ * partition zone 7.5", sliding-door opening 51.75", door-to-wheel-well zone
+ * 37.3125", wheel-well length 36.5", post-wheel-well zone 31.3125", and
+ * available cargo after partition 156.875".
+ *
+ * The whole-inch runtime chain is rounded as one internally consistent model:
+ * partition ends 8, door ends 60, wheel well 97→133, rear boundary 164.
  */
 export const SPRINTER_170_HR: VehicleGeometry = {
-	id: 'sprinter-170-hr',
+	id: 'sprinter-170-high-roof',
 	name: 'Sprinter · 170" WB High Roof',
 	roof: 'high',
 	wheelbase: '170"',
-	length: 165,
+	length: 164,
 	width: 61,
-	payloadCapacity: 4211,
-	payloadRequiresVin: true,
-	walls: [ driverWall( 165, 133 ), passengerWall( 165, 133 ) ].map(
-		( wall ) => ( {
-			...wall,
-			wheelWells: wall.wheelWells.map( ( well ) => ( {
-				...well,
-				from: 96,
-			} ) ),
-			doorZones:
-				wall.wall === 'passenger'
-					? [ { from: 8, to: 60, reason: 'Sliding door opening' } ]
-					: [],
-		} )
-	),
+	payloadCapacity: null,
+	walls: [ driverWall( 164, 97, 133 ), passengerWall( 164, 97, 133 ) ],
 };
 
-/** Sprinter 144" WB Standard Roof (same walls; taller shelves don't fit). */
-export const SPRINTER_144_STD: VehicleGeometry = {
-	id: 'sprinter-144-std',
-	name: 'Sprinter · 144" WB Standard Roof',
-	roof: 'standard',
-	wheelbase: '144"',
-	length: 125,
-	width: 61,
-	payloadCapacity: 4211,
-	walls: [ driverWall( 125, 108 ), passengerWall( 125, 108 ) ],
-};
-
-/** All Phase 2 vehicles. Default is the High Roof. */
+/** Runtime-supported planning vehicles. Default is the 144 High Roof. */
 export const VEHICLES: VehicleGeometry[] = [ SPRINTER_144_HR, SPRINTER_170_HR ];
+
+export function getVehicle( vehicleId: string ): VehicleGeometry | undefined {
+	return VEHICLES.find( ( vehicle ) => vehicle.id === vehicleId );
+}
 
 /**
  * Resolve a wall's geometry by id.

@@ -45,18 +45,19 @@
 /* ---- Shell layout ---- */
 .sup-shell {
 	display: grid;
-	grid-template-rows: var(--sup-nav-height) auto 1fr;
+	grid-template-rows: var(--sup-nav-height) 1fr;
 	min-height: 640px;
 }
 
 .sup-planning-warning {
-	padding: 9px 20px;
-	border-bottom: 1px solid #d7b36c;
+	margin: 10px 0 0;
+	padding: 8px 10px;
+	border-left: 3px solid var(--slate-warn);
+	border-radius: 6px;
 	background: #fff4d6;
 	color: #684610;
 	font-size: 12px;
-	font-weight: 800;
-	text-align: center;
+	font-weight: 700;
 }
 
 .sup-body {

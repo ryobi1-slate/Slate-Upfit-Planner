@@ -3,6 +3,7 @@
  */
 
 import { usePlanner } from '../hooks/usePlanner';
+import { PLANNING_GEOMETRY_WARNING } from '../data/geometry';
 import type { FitmentSeverity } from '../types';
 
 function fitStatus( issues: { severity: FitmentSeverity }[] ): {
@@ -15,7 +16,7 @@ function fitStatus( issues: { severity: FitmentSeverity }[] ): {
 	if ( issues.some( ( i ) => i.severity === 'warning' ) ) {
 		return { label: 'Fits with warnings', kind: 'warning' };
 	}
-	return { label: 'Layout fits', kind: 'ok' };
+	return { label: 'Planning fit', kind: 'ok' };
 }
 
 export function BuildSheetRail() {
@@ -31,12 +32,15 @@ export function BuildSheetRail() {
 					<span className="sup-fit__dot" />
 					{ status.label }
 				</span>
+				<p className="sup-planning-warning">
+					{ PLANNING_GEOMETRY_WARNING }
+				</p>
 
 				<ul className="sup-issues">
 					{ issues.length === 0 && (
 						<li className="sup-issue sup-issue--info">
-							No fitment issues · { state.placements.length }{ ' ' }
-							components placed.
+							No automated fit conflicts detected ·{ ' ' }
+							{ state.placements.length } components placed.
 						</li>
 					) }
 					{ issues.map( ( issue, index ) => (
@@ -73,42 +77,34 @@ export function BuildSheetRail() {
 						{ payload.componentWeight } lb
 					</span>
 				</div>
-				{ state.vehicle.payloadRequiresVin ? (
-					<p className="sup-issue sup-issue--warning">
-						VIN required to display chassis capacity and remaining
-						payload.
+				<div className="sup-stat">
+					<span className="sup-stat__label">Chassis capacity</span>
+					<span className="sup-stat__value">
+						{ payload.capacity === null
+							? 'VIN required'
+							: `${ payload.capacity } lb` }
+					</span>
+				</div>
+				<div className="sup-stat">
+					<span className="sup-stat__label">Remaining</span>
+					<span
+						className={
+							'sup-stat__value' +
+							( payload.overCapacity
+								? ' sup-stat__value--bad'
+								: '' )
+						}
+					>
+						{ payload.remaining === null
+							? 'VIN required'
+							: `${ payload.remaining } lb` }
+					</span>
+				</div>
+				{ payload.capacity !== null && payload.overCapacity && (
+					<p className="sup-issue sup-issue--error">
+						Over payload — chassis upgrade required.
 					</p>
-				) : (
-					<>
-						<div className="sup-stat">
-							<span className="sup-stat__label">
-								Chassis capacity
-							</span>
-							<span className="sup-stat__value">
-								{ payload.capacity } lb
-							</span>
-						</div>
-						<div className="sup-stat">
-							<span className="sup-stat__label">Remaining</span>
-							<span
-								className={
-									'sup-stat__value' +
-									( payload.overCapacity
-										? ' sup-stat__value--bad'
-										: '' )
-								}
-							>
-								{ payload.remaining } lb
-							</span>
-						</div>
-					</>
 				) }
-				{ ! state.vehicle.payloadRequiresVin &&
-					payload.overCapacity && (
-						<p className="sup-issue sup-issue--error">
-							Over payload — chassis upgrade required.
-						</p>
-					) }
 			</section>
 		</aside>
 	);
