@@ -5,13 +5,16 @@
  */
 
 import { usePlanner } from '../hooks/usePlanner';
+import { PLANNING_GEOMETRY_WARNING } from '../data/geometry';
 import type { WallId } from '../types';
 
 export function ConfigurationRail() {
 	const {
 		state,
 		catalog,
+		supportedVehicles,
 		remainingOnActiveWall,
+		selectVehicle,
 		selectProduct,
 		switchWall,
 		placeSelected,
@@ -23,10 +26,37 @@ export function ConfigurationRail() {
 		<aside className="sup-rail" aria-label="Configuration">
 			<section className="sup-panel">
 				<h2 className="sup-panel__title">Vehicle</h2>
+				<label className="sup-field" htmlFor="sup-vehicle-selector">
+					<span className="sup-field__label">
+						Vehicle configuration
+					</span>
+					<select
+						id="sup-vehicle-selector"
+						className="sup-vehicle-selector"
+						value={ vehicle.id }
+						onChange={ ( event ) =>
+							selectVehicle( event.currentTarget.value )
+						}
+					>
+						{ supportedVehicles.map( ( option ) => (
+							<option key={ option.id } value={ option.id }>
+								{ option.name }
+							</option>
+						) ) }
+					</select>
+				</label>
+				<p className="sup-panel__hint">
+					Changing vehicles clears the current layout.
+				</p>
 				<p className="sup-panel__hint">
 					{ vehicle.name } · { vehicle.length }&quot; ×{ ' ' }
-					{ vehicle.width }&quot; · { vehicle.payloadCapacity } lb
-					payload
+					{ vehicle.width }&quot; ·{ ' ' }
+					{ vehicle.payloadCapacity === null
+						? 'Payload requires VIN'
+						: `${ vehicle.payloadCapacity } lb payload` }
+				</p>
+				<p className="sup-planning-warning">
+					{ PLANNING_GEOMETRY_WARNING }
 				</p>
 
 				<div className="sup-field">

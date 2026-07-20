@@ -18,8 +18,19 @@ import {
 	validatePlacement,
 } from '../assets/src/engine';
 import { initPlannerState, plannerReducer } from '../assets/src/state/reducer';
-import { loadConfiguration } from '../assets/src/state/actions';
-import { SPRINTER_144_HR, getWall } from '../assets/src/data/geometry';
+import {
+	loadConfiguration,
+	selectVehicle,
+} from '../assets/src/state/actions';
+import {
+	getVehicle,
+	getWall,
+	PLANNING_GEOMETRY_WARNING,
+	SPRINTER_144_HR,
+	SPRINTER_170_HR,
+	VEHICLES,
+} from '../assets/src/data/geometry';
+import { resolveSupportedVehicle } from '../assets/src/hooks/usePlanner';
 import {
 	COMPONENTS_BY_SKU,
 	INITIAL_PLACEMENTS,
@@ -39,6 +50,83 @@ function place(
 ): Placement {
 	return { id, sku, wall, position: { x, y: 0 } };
 }
+
+describe( 'runtime vehicle registry', () => {
+	it( 'contains only canonical 144 and 170 High Roof records', () => {
+		expect( VEHICLES ).toHaveLength( 2 );
+		expect( VEHICLES.map( ( option ) => option.id ) ).toEqual( [
+			'sprinter-144-high-roof',
+			'sprinter-170-high-roof',
+		] );
+		expect( VEHICLES.every( ( option ) => option.roof === 'high' ) ).toBe(
+			true
+		);
+	} );
+
+	it( 'resolves only supported runtime vehicle IDs', () => {
+		expect( getVehicle( 'sprinter-144-high-roof' ) ).toBe(
+			SPRINTER_144_HR
+		);
+		expect( getVehicle( 'sprinter-170-high-roof' ) ).toBe(
+			SPRINTER_170_HR
+		);
+		expect( getVehicle( 'unknown' ) ).toBeUndefined();
+		expect( getVehicle( 'sprinter-144-standard-roof' ) ).toBeUndefined();
+		expect( getVehicle( 'sprinter-170-extended-high-roof' ) ).toBeUndefined();
+	} );
+
+	it( 'maps the explicit legacy 144 ID to canonical runtime geometry', () => {
+		expect( getVehicle( 'sprinter-144-hr' ) ).toBe( SPRINTER_144_HR );
+	} );
+
+	it( 'exports the exact planning warning', () => {
+		expect( PLANNING_GEOMETRY_WARNING ).toBe(
+			'Planning dimensions — verify final fitment before installation.'
+		);
+	} );
+} );
+
+describe( 'runtime vehicle geometry', () => {
+	it( 'keeps the established 144 High Roof coordinates', () => {
+		const driverWall = getWall( SPRINTER_144_HR, 'driver' )!;
+		const passengerWall = getWall( SPRINTER_144_HR, 'passenger' )!;
+
+		expect( driverWall.partition ).toBe( 8 );
+		expect( driverWall.length ).toBe( 124 );
+		expect( passengerWall.doorZones[ 0 ] ).toMatchObject( {
+			from: 8,
+			to: 60,
+		} );
+		expect( driverWall.wheelWells[ 0 ] ).toMatchObject( {
+			from: 71,
+			to: 107,
+		} );
+		expect( passengerWall.wheelWells[ 0 ] ).toMatchObject( {
+			from: 71,
+			to: 107,
+		} );
+	} );
+
+	it( 'uses the approved internally consistent 170 coordinates', () => {
+		const driverWall = getWall( SPRINTER_170_HR, 'driver' )!;
+		const passengerWall = getWall( SPRINTER_170_HR, 'passenger' )!;
+
+		expect( driverWall.partition ).toBe( 8 );
+		expect( driverWall.length ).toBe( 164 );
+		expect( passengerWall.doorZones[ 0 ] ).toMatchObject( {
+			from: 8,
+			to: 60,
+		} );
+		expect( driverWall.wheelWells[ 0 ] ).toMatchObject( {
+			from: 97,
+			to: 133,
+		} );
+		expect( passengerWall.wheelWells[ 0 ] ).toMatchObject( {
+			from: 97,
+			to: 133,
+		} );
+	} );
+} );
 
 describe( 'geometry helpers', () => {
 	it( 'snaps to the nearest inch', () => {
@@ -203,6 +291,78 @@ describe( 'validatePlacement', () => {
 	} );
 } );
 
+describe( 'Sprinter 170 High Roof fitment', () => {
+	const driver170 = getWall( SPRINTER_170_HR, 'driver' )!;
+	const passenger170 = getWall( SPRINTER_170_HR, 'passenger' )!;
+
+	it( 'reports a passenger sliding-door conflict', () => {
+		const placement = place( 'door', '22-3438', 'passenger', 30 );
+		const issues = validatePlacement(
+			placement,
+			shelf48,
+			SPRINTER_170_HR,
+			passenger170,
+			[ placement ],
+			COMPONENTS_BY_SKU
+		);
+
+		expect( issues.some( ( issue ) => issue.code === 'DOOR_CONFLICT' ) ).toBe(
+			true
+		);
+	} );
+
+	it( 'reports a wheel-well endpoint warning', () => {
+		const placement = place( 'well', '22-3436', 'driver', 100 );
+		const issues = validatePlacement(
+			placement,
+			COMPONENTS_BY_SKU[ '22-3436' ]!,
+			SPRINTER_170_HR,
+			driver170,
+			[ placement ],
+			COMPONENTS_BY_SKU
+		);
+
+		expect(
+			issues.some(
+				( issue ) =>
+					issue.code.startsWith( 'WHEEL_WELL' ) &&
+					issue.severity === 'warning'
+			)
+		).toBe( true );
+	} );
+
+	it( 'reports a placement extending past the 164-inch rear boundary', () => {
+		const placement = place( 'rear', '22-3438', 'driver', 130 );
+		const issues = validatePlacement(
+			placement,
+			shelf48,
+			SPRINTER_170_HR,
+			driver170,
+			[ placement ],
+			COMPONENTS_BY_SKU
+		);
+
+		expect( issues.some( ( issue ) => issue.code === 'EXCEEDS_CARGO' ) ).toBe(
+			true
+		);
+	} );
+
+	it( 'accepts a legal driver-side placement', () => {
+		const placement = place( 'legal', '22-3438', 'driver', 12 );
+
+		expect(
+			validatePlacement(
+				placement,
+				shelf48,
+				SPRINTER_170_HR,
+				driver170,
+				[ placement ],
+				COMPONENTS_BY_SKU
+			)
+		).toEqual( [] );
+	} );
+} );
+
 describe( 'totals', () => {
 	it( 'computes wall usage for both walls', () => {
 		const usage = calculateWallUsage(
@@ -215,17 +375,33 @@ describe( 'totals', () => {
 		expect( driverUsage.usedLength ).toBe( 96 ); // two 48" shelves
 	} );
 
-	it( 'computes payload remaining as capacity − component weight', () => {
+	it( 'keeps VIN-dependent capacity and remaining payload unknown', () => {
 		const payload = calculatePayload(
 			vehicle,
 			INITIAL_PLACEMENTS,
 			COMPONENTS_BY_SKU
 		);
 		expect( payload.componentWeight ).toBe( shelf48.weight * 3 );
-		expect( payload.remaining ).toBe(
-			vehicle.payloadCapacity - shelf48.weight * 3
-		);
+		expect( payload.driverWeight ).toBe( shelf48.weight * 2 );
+		expect( payload.passengerWeight ).toBe( shelf48.weight );
+		expect( payload.capacity ).toBeNull();
+		expect( payload.remaining ).toBeNull();
 		expect( payload.overCapacity ).toBe( false );
+	} );
+
+	it( 'preserves calculations for a future known numeric capacity', () => {
+		const knownCapacityVehicle = { ...vehicle, payloadCapacity: 200 };
+		const payload = calculatePayload(
+			knownCapacityVehicle,
+			INITIAL_PLACEMENTS,
+			COMPONENTS_BY_SKU
+		);
+
+		expect( payload.capacity ).toBe( 200 );
+		expect( payload.remaining ).toBe( 200 - shelf48.weight * 3 );
+		expect( payload.overCapacity ).toBe(
+			200 - shelf48.weight * 3 < 0
+		);
 	} );
 } );
 
@@ -243,10 +419,166 @@ describe( 'normalized payload', () => {
 		expect( payload.placements[ 0 ]!.position ).toEqual( { x: 12, y: 0 } );
 		expect( Array.isArray( payload.validation ) ).toBe( true );
 		expect( payload.dealer_notes ).toBe( 'test' );
+		expect( payload.totals.payload.capacity ).toBeNull();
+		expect( payload.totals.payload.remaining ).toBeNull();
+		expect( payload.totals.payload.componentWeight ).toBe(
+			shelf48.weight * 3
+		);
+	} );
+} );
+
+describe( 'vehicle selection', () => {
+	it( 'selects 170 through the reducer and clears the current layout', () => {
+		const state = initPlannerState( {
+			vehicle,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: INITIAL_PLACEMENTS,
+			activeWall: 'passenger',
+		} );
+		const next = plannerReducer( state, selectVehicle( SPRINTER_170_HR ) );
+
+		expect( next.vehicle ).toBe( SPRINTER_170_HR );
+		expect( next.activeWall ).toBe( 'driver' );
+		expect( next.placements ).toEqual( [] );
+	} );
+
+	it( 'ignores an unsupported ID at the hook-level resolver boundary', () => {
+		const state = initPlannerState( {
+			vehicle,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: INITIAL_PLACEMENTS,
+			activeWall: 'passenger',
+		} );
+		const unsupported = resolveSupportedVehicle(
+			'sprinter-170-extended-high-roof'
+		);
+		const next = unsupported
+			? plannerReducer( state, selectVehicle( unsupported ) )
+			: state;
+
+		expect( unsupported ).toBeUndefined();
+		expect( next ).toBe( state );
 	} );
 } );
 
 describe( 'reducer load configuration', () => {
+	it( 'restores canonical 170 geometry, placements, wall, and payload identity', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_144_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+			activeWall: 'driver',
+		} );
+		const loaded = [ place( 'placement-1', '22-3438', 'passenger', 62 ) ];
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-170',
+			vehicle: SPRINTER_170_HR,
+			activeWall: 'passenger',
+			placements: loaded,
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, loaded )
+		);
+		const normalized = buildNormalizedPayload( {
+			configurationId: next.configurationId,
+			vehicle: next.vehicle,
+			activeWall: next.activeWall,
+			placements: next.placements,
+			componentsBySku: next.componentsBySku,
+		} );
+
+		expect( next.vehicle ).toBe( SPRINTER_170_HR );
+		expect( next.vehicle.length ).toBe( 164 );
+		expect( next.placements ).toEqual( loaded );
+		expect( next.activeWall ).toBe( 'passenger' );
+		expect( normalized.vehicle.id ).toBe( 'sprinter-170-high-roof' );
+		expect( normalized.vehicle.wheelbase ).toBe( '170"' );
+	} );
+
+	it( 'restores canonical 144 geometry into a 170 state', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_170_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+		} );
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-144',
+			vehicle: SPRINTER_144_HR,
+			activeWall: 'driver',
+			placements: [],
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, [] )
+		);
+
+		expect( next.vehicle ).toBe( SPRINTER_144_HR );
+	} );
+
+	it( 'normalizes the legacy 144 vehicle ID on load', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_170_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+		} );
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-legacy-144',
+			vehicle: SPRINTER_144_HR,
+			activeWall: 'driver',
+			placements: [],
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+		payload.vehicle.id = 'sprinter-144-hr';
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, [] )
+		);
+		const normalized = buildNormalizedPayload( {
+			configurationId: next.configurationId,
+			vehicle: next.vehicle,
+			activeWall: next.activeWall,
+			placements: next.placements,
+			componentsBySku: next.componentsBySku,
+		} );
+
+		expect( next.vehicle ).toBe( SPRINTER_144_HR );
+		expect( normalized.vehicle.id ).toBe( 'sprinter-144-high-roof' );
+	} );
+
+	it( 'retains the current vehicle for an unknown ID and restores placements', () => {
+		const state = initPlannerState( {
+			vehicle: SPRINTER_170_HR,
+			componentsBySku: COMPONENTS_BY_SKU,
+			placements: [],
+			activeWall: 'passenger',
+		} );
+		const loaded = [ place( 'placement-1', '22-3438', 'driver', 12 ) ];
+		const payload = buildNormalizedPayload( {
+			configurationId: 'cfg-unknown',
+			vehicle: SPRINTER_144_HR,
+			activeWall: 'driver',
+			placements: loaded,
+			componentsBySku: COMPONENTS_BY_SKU,
+		} );
+		payload.vehicle.id = 'unknown-vehicle';
+		( payload.vehicle as { wall: string } ).wall = 'rear';
+
+		const next = plannerReducer(
+			state,
+			loadConfiguration( payload, loaded )
+		);
+
+		expect( next.vehicle ).toBe( SPRINTER_170_HR );
+		expect( next.placements ).toEqual( loaded );
+		expect( next.activeWall ).toBe( 'passenger' );
+	} );
+
 	it( 'restores placements and mints non-colliding ids afterward', () => {
 		let state = initPlannerState( {
 			vehicle,
