@@ -15,6 +15,7 @@ import {
 	clampPlacement,
 	findOpenPlacement,
 	snapToIncrement,
+	validateConfiguration,
 	validatePlacement,
 } from '../assets/src/engine';
 import { initPlannerState, plannerReducer } from '../assets/src/state/reducer';
@@ -35,12 +36,19 @@ import {
 	COMPONENTS_BY_SKU,
 	INITIAL_PLACEMENTS,
 } from '../assets/src/data/catalog';
-import type { Placement } from '../assets/src/types';
+import type { Placement, PlannerComponent } from '../assets/src/types';
 
 const vehicle = SPRINTER_144_HR;
 const driver = getWall( vehicle, 'driver' )!;
 const passenger = getWall( vehicle, 'passenger' )!;
 const shelf48 = COMPONENTS_BY_SKU[ '22-3438' ]!;
+const samplePlacements = [
+	place( 'sample-1', '22-3438', 'driver', 12 ),
+	place( 'sample-2', '22-3438', 'driver', 62 ),
+	place( 'sample-3', '22-3438', 'passenger', 62 ),
+];
+const knownWeightShelf: PlannerComponent = { ...shelf48, weight: 100 };
+const knownWeightCatalog = { '22-3438': knownWeightShelf };
 
 function place(
 	id: string,
@@ -289,6 +297,37 @@ describe( 'validatePlacement', () => {
 			issues.some( ( i ) => i.code === 'INCOMPATIBLE_VEHICLE' )
 		).toBe( true );
 	} );
+
+	it( 'rejects an exact vehicle ID outside the product allowlist', () => {
+		const p = place( 'p', '22-3438', 'driver', 12 );
+		const unsupportedVehicle = { ...vehicle, id: 'sprinter-other-high-roof' };
+		const issues = validatePlacement( p, shelf48, unsupportedVehicle, driver, [ p ], COMPONENTS_BY_SKU );
+		expect( issues.some( ( issue ) => issue.code === 'INCOMPATIBLE_VEHICLE' ) ).toBe( true );
+	} );
+
+	it.each( [ undefined, [] ] )( 'fails closed without throwing for compatibleVehicleIds=%p', ( compatibleVehicleIds ) => {
+		const incompleteComponent = { ...shelf48, compatibleVehicleIds } as unknown as PlannerComponent;
+		expect( () => validatePlacement( place( 'p', shelf48.sku, 'driver', 12 ), incompleteComponent, vehicle, driver, [], COMPONENTS_BY_SKU ) ).not.toThrow();
+		const issues = validatePlacement( place( 'p', shelf48.sku, 'driver', 12 ), incompleteComponent, vehicle, driver, [], COMPONENTS_BY_SKU );
+		expect( issues.some( ( issue ) => issue.code === 'INCOMPATIBLE_VEHICLE' ) ).toBe( true );
+	} );
+
+	it( 'continues normal validation for a supported vehicle ID', () => {
+		const placement = place( 'supported', shelf48.sku, 'driver', 12 );
+		expect( validatePlacement( placement, shelf48, vehicle, driver, [ placement ], COMPONENTS_BY_SKU ).some( ( issue ) => issue.code === 'INCOMPATIBLE_VEHICLE' ) ).toBe( false );
+	} );
+
+	it( 'reports an unknown loaded SKU with the stable code', () => {
+		const issues = validateConfiguration( vehicle, [ place( 'unknown', 'NO-SUCH-SKU', 'driver', 12 ) ], COMPONENTS_BY_SKU );
+		expect( issues ).toEqual( [ expect.objectContaining( { code: 'UNKNOWN_COMPONENT', placementId: 'unknown' } ) ] );
+	} );
+
+	it( 'lets normal 144 passenger geometry reject the selectable 72-inch shelf', () => {
+		const shelf72 = COMPONENTS_BY_SKU[ '22-3440' ]!;
+		const placement = place( 'shelf-72', shelf72.sku, 'passenger', 60 );
+		const issues = validatePlacement( placement, shelf72, vehicle, passenger, [ placement ], COMPONENTS_BY_SKU );
+		expect( issues.some( ( issue ) => issue.severity === 'error' ) ).toBe( true );
+	} );
 } );
 
 describe( 'Sprinter 170 High Roof fitment', () => {
@@ -361,13 +400,20 @@ describe( 'Sprinter 170 High Roof fitment', () => {
 			)
 		).toEqual( [] );
 	} );
+
+	it( 'fits the 72-inch shelf where 170 driver geometry permits', () => {
+		const shelf72 = COMPONENTS_BY_SKU[ '22-3440' ]!;
+		const placement = place( 'shelf-72', shelf72.sku, 'driver', 60 );
+		const issues = validatePlacement( placement, shelf72, SPRINTER_170_HR, driver170, [ placement ], COMPONENTS_BY_SKU );
+		expect( issues.some( ( issue ) => issue.severity === 'error' ) ).toBe( false );
+	} );
 } );
 
 describe( 'totals', () => {
 	it( 'computes wall usage for both walls', () => {
 		const usage = calculateWallUsage(
 			vehicle,
-			INITIAL_PLACEMENTS,
+			samplePlacements,
 			COMPONENTS_BY_SKU
 		);
 		expect( usage.length ).toBe( 2 );
@@ -375,33 +421,38 @@ describe( 'totals', () => {
 		expect( driverUsage.usedLength ).toBe( 96 ); // two 48" shelves
 	} );
 
-	it( 'keeps VIN-dependent capacity and remaining payload unknown', () => {
+	it( 'marks unavailable runtime weights incomplete', () => {
 		const payload = calculatePayload(
 			vehicle,
-			INITIAL_PLACEMENTS,
+			samplePlacements,
 			COMPONENTS_BY_SKU
 		);
-		expect( payload.componentWeight ).toBe( shelf48.weight * 3 );
-		expect( payload.driverWeight ).toBe( shelf48.weight * 2 );
-		expect( payload.passengerWeight ).toBe( shelf48.weight );
+		expect( payload.componentWeight ).toBe( 0 );
+		expect( payload.hasUnknownComponentWeight ).toBe( true );
 		expect( payload.capacity ).toBeNull();
 		expect( payload.remaining ).toBeNull();
 		expect( payload.overCapacity ).toBe( false );
 	} );
 
-	it( 'preserves calculations for a future known numeric capacity', () => {
+	it( 'preserves calculations for a known-weight fixture', () => {
 		const knownCapacityVehicle = { ...vehicle, payloadCapacity: 200 };
 		const payload = calculatePayload(
 			knownCapacityVehicle,
-			INITIAL_PLACEMENTS,
-			COMPONENTS_BY_SKU
+			samplePlacements,
+			knownWeightCatalog
 		);
 
 		expect( payload.capacity ).toBe( 200 );
-		expect( payload.remaining ).toBe( 200 - shelf48.weight * 3 );
-		expect( payload.overCapacity ).toBe(
-			200 - shelf48.weight * 3 < 0
-		);
+		expect( payload.componentWeight ).toBe( 300 );
+		expect( payload.hasUnknownComponentWeight ).toBe( false );
+		expect( payload.remaining ).toBe( -100 );
+		expect( payload.overCapacity ).toBe( true );
+	} );
+
+	it( 'marks an unknown SKU incomplete without crashing', () => {
+		const payload = calculatePayload( vehicle, [ place( 'unknown', 'NO-SUCH-SKU', 'driver', 12 ) ], COMPONENTS_BY_SKU );
+		expect( payload.componentWeight ).toBe( 0 );
+		expect( payload.hasUnknownComponentWeight ).toBe( true );
 	} );
 } );
 
@@ -411,7 +462,7 @@ describe( 'normalized payload', () => {
 			configurationId: null,
 			vehicle,
 			activeWall: 'driver',
-			placements: INITIAL_PLACEMENTS,
+			placements: samplePlacements,
 			componentsBySku: COMPONENTS_BY_SKU,
 			dealerNotes: 'test',
 		} );
@@ -421,9 +472,8 @@ describe( 'normalized payload', () => {
 		expect( payload.dealer_notes ).toBe( 'test' );
 		expect( payload.totals.payload.capacity ).toBeNull();
 		expect( payload.totals.payload.remaining ).toBeNull();
-		expect( payload.totals.payload.componentWeight ).toBe(
-			shelf48.weight * 3
-		);
+		expect( payload.totals.payload.componentWeight ).toBe( 0 );
+		expect( payload.totals.payload.hasUnknownComponentWeight ).toBe( true );
 	} );
 } );
 
@@ -711,6 +761,7 @@ describe( 'interaction flow (engine + reducer, mirrors the UI hook)', () => {
 			state.placements,
 			COMPONENTS_BY_SKU
 		);
-		expect( payload.componentWeight ).toBe( shelf48.weight );
+		expect( payload.componentWeight ).toBe( 0 );
+		expect( payload.hasUnknownComponentWeight ).toBe( true );
 	} );
 } );

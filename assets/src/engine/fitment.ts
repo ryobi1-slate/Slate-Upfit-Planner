@@ -60,6 +60,14 @@ export function validatePlacement(
 	const { start, end } = getPlacementBounds( placement, component );
 
 	// Compatibility ----------------------------------------------------------
+	if ( ! component.compatibleVehicleIds?.includes( vehicle.id ) ) {
+		issues.push( {
+			code: 'INCOMPATIBLE_VEHICLE',
+			severity: 'error',
+			message: `${ component.name } is not approved for ${ vehicle.name }.`,
+			placementId: placement.id,
+		} );
+	}
 	if (
 		component.compatibleRoof.length > 0 &&
 		! component.compatibleRoof.includes( vehicle.roof )
@@ -225,13 +233,22 @@ export function validateConfiguration(
 	return placements.flatMap( ( placement ) => {
 		const component = componentsBySku[ placement.sku ];
 		const wall = wallsById[ placement.wall ];
-		if ( ! component || ! wall ) {
+		if ( ! component ) {
+			return [
+				{
+					code: 'UNKNOWN_COMPONENT' as const,
+					severity: 'error' as const,
+					message: `Placement references unknown SKU ${ placement.sku }.`,
+					placementId: placement.id,
+				},
+			];
+		}
+		if ( ! wall ) {
 			return [
 				{
 					code: 'INCOMPATIBLE_VEHICLE' as const,
 					severity: 'error' as const,
-					message:
-						'Placement references an unknown component or wall.',
+					message: 'Placement references an unknown wall.',
 					placementId: placement.id,
 				},
 			];
