@@ -24,7 +24,7 @@ export function classifyWestcanProduct(
 ): WestcanCategoryCandidate {
 	const value = `${ partNumber } ${ sourceName }`.toLowerCase();
 	if (
-		/\b(mount|mounting|install|installation|bracket|hold[- ]?down) kit\b/.test(
+		/\b(mount|mounting|install|installation|bracket|hold[- ]?down) kits?\b/.test(
 			value
 		)
 	) {
@@ -33,32 +33,36 @@ export function classifyWestcanProduct(
 	if ( /\bpartition\b/.test( value ) ) {
 		return 'partition';
 	}
-	if ( /\b(liner|wall lining|ceiling lining)\b/.test( value ) ) {
+	if ( /\b(liners?|wall lining|ceiling lining)\b/.test( value ) ) {
 		return 'liner';
 	}
-	if ( /\bladder rack\b/.test( value ) ) {
+	if ( /\bladder racks?\b/.test( value ) ) {
 		return 'ladder_rack';
 	}
-	if ( /\b(shelf|shelving)\b/.test( value ) ) {
-		return 'shelving';
-	}
-	if ( /\b(cabinet|locker)\b/.test( value ) ) {
+	if ( /\b(cabinets?|lockers?)\b/.test( value ) ) {
 		return 'cabinet';
 	}
-	if ( /\bdrawer\b/.test( value ) ) {
+	if ( /\bdrawers?\b/.test( value ) ) {
 		return 'drawer';
 	}
 	if ( /\bworkbench\b/.test( value ) ) {
 		return 'workbench';
 	}
-	if ( /\b(storage|tote holder|spool holder)\b/.test( value ) ) {
+	if ( /\b(storage|tote holders?|spool holders?)\b/.test( value ) ) {
 		return 'storage';
 	}
-	if ( /\b(cab guard|canopy|rear rack|rail cap)\b/.test( value ) ) {
+	if ( /\b(cab guards?|canopy|rear racks?|rail caps?)\b/.test( value ) ) {
 		return 'exterior';
 	}
-	if ( /\b(accessory|hook|holder|divider|door front|step)\b/.test( value ) ) {
+	if (
+		/\b(accessory|accessories|hangers?|hooks?|holders?|dividers?|door fronts?|steps?)\b/.test(
+			value
+		)
+	) {
 		return 'accessory';
+	}
+	if ( /\b(shelves|shelf|shelving)\b/.test( value ) ) {
+		return 'shelving';
 	}
 	return 'unknown';
 }

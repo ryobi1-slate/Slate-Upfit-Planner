@@ -305,6 +305,18 @@ describe( 'validatePlacement', () => {
 		expect( issues.some( ( issue ) => issue.code === 'INCOMPATIBLE_VEHICLE' ) ).toBe( true );
 	} );
 
+	it.each( [ undefined, [] ] )( 'fails closed without throwing for compatibleVehicleIds=%p', ( compatibleVehicleIds ) => {
+		const incompleteComponent = { ...shelf48, compatibleVehicleIds } as unknown as PlannerComponent;
+		expect( () => validatePlacement( place( 'p', shelf48.sku, 'driver', 12 ), incompleteComponent, vehicle, driver, [], COMPONENTS_BY_SKU ) ).not.toThrow();
+		const issues = validatePlacement( place( 'p', shelf48.sku, 'driver', 12 ), incompleteComponent, vehicle, driver, [], COMPONENTS_BY_SKU );
+		expect( issues.some( ( issue ) => issue.code === 'INCOMPATIBLE_VEHICLE' ) ).toBe( true );
+	} );
+
+	it( 'continues normal validation for a supported vehicle ID', () => {
+		const placement = place( 'supported', shelf48.sku, 'driver', 12 );
+		expect( validatePlacement( placement, shelf48, vehicle, driver, [ placement ], COMPONENTS_BY_SKU ).some( ( issue ) => issue.code === 'INCOMPATIBLE_VEHICLE' ) ).toBe( false );
+	} );
+
 	it( 'reports an unknown loaded SKU with the stable code', () => {
 		const issues = validateConfiguration( vehicle, [ place( 'unknown', 'NO-SUCH-SKU', 'driver', 12 ) ], COMPONENTS_BY_SKU );
 		expect( issues ).toEqual( [ expect.objectContaining( { code: 'UNKNOWN_COMPONENT', placementId: 'unknown' } ) ] );

@@ -60,7 +60,7 @@ export function validatePlacement(
 	const { start, end } = getPlacementBounds( placement, component );
 
 	// Compatibility ----------------------------------------------------------
-	if ( ! component.compatibleVehicleIds.includes( vehicle.id ) ) {
+	if ( ! component.compatibleVehicleIds?.includes( vehicle.id ) ) {
 		issues.push( {
 			code: 'INCOMPATIBLE_VEHICLE',
 			severity: 'error',

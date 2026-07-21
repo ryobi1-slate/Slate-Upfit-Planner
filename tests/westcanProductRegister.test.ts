@@ -4,6 +4,7 @@ import { describe, expect, it } from '@jest/globals';
 import { classifyWestcanProduct } from '../assets/src/data/westcanProductClassification';
 import type { WestcanCategoryCandidate } from '../assets/src/data/westcanProductClassification';
 import { INITIAL_PLACEMENTS, SHELVES } from '../assets/src/data/catalog';
+import { formatComponentWeight } from '../assets/src/components/ConfigurationRail';
 
 const root = path.resolve( __dirname, '..' );
 const registerPath = path.join( root, 'docs/data-intake/westcan-products/westcan-product-register.csv' );
@@ -62,9 +63,18 @@ describe( 'Westcan source register', () => {
 describe( 'Westcan intake classification', () => {
 	const cases: Array< [ string, string, WestcanCategoryCandidate ] > = [
 		[ '22-3438', '3 Shelf Unit', 'shelving' ],
+		[ '22-3438', '3 Shelves Unit', 'shelving' ],
 		[ 'A', 'Composite Partition', 'partition' ],
 		[ 'B', 'Ladder Rack', 'ladder_rack' ],
+		[ 'B2', 'Double Ladder Racks', 'ladder_rack' ],
 		[ 'C', 'Mounting Kit', 'mounting_kit' ],
+		[ 'C2', 'Shelf Mounting Kits', 'mounting_kit' ],
+		[ 'E', 'Drawer Units', 'drawer' ],
+		[ 'F', 'Security Cabinets with Shelves', 'cabinet' ],
+		[ 'G', 'Interior Wall Liners', 'liner' ],
+		[ 'H', 'Utility Hooks', 'accessory' ],
+		[ 'I', 'Shelf Mounted Ladder Hangers', 'accessory' ],
+		[ 'J', 'Tool Holders and Dividers', 'accessory' ],
 		[ 'D', 'Unclear Product', 'unknown' ],
 	];
 	it.each( cases )( 'classifies %s deterministically', ( part, name, expected ) => {
@@ -112,6 +122,12 @@ describe( 'runtime Westcan catalog', () => {
 		expect( productRail ).toContain( 'component.tiers' );
 		expect( productRail ).toContain( 'Weight unavailable' );
 		expect( buildSheet ).toContain( "? 'Incomplete'" );
+	} );
+
+	it( 'formats only verified product-card weights numerically', () => {
+		expect( formatComponentWeight( null ) ).toBe( 'Weight unavailable' );
+		expect( formatComponentWeight( 83 ) ).toBe( '83 lb' );
+		expect( formatComponentWeight( null ) ).not.toBe( '0 lb' );
 	} );
 
 	it( 'matches both configuration 1.0 SKU allowlists', () => {

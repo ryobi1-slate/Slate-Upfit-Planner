@@ -6,7 +6,18 @@
 
 import { usePlanner } from '../hooks/usePlanner';
 import { PLANNING_GEOMETRY_WARNING } from '../data/geometry';
-import type { WallId } from '../types';
+import type { PlannerComponent, WallId } from '../types';
+
+/**
+ * Format only verified component weights for catalog display.
+ *
+ * @param weight Verified weight or null when unavailable.
+ */
+export function formatComponentWeight(
+	weight: PlannerComponent[ 'weight' ]
+): string {
+	return weight === null ? 'Weight unavailable' : `${ weight } lb`;
+}
 
 export function ConfigurationRail() {
 	const {
@@ -123,7 +134,9 @@ export function ConfigurationRail() {
 										{ component.height }&quot; H ·{ ' ' }
 										{ component.tiers } shelves
 										<br />
-										Weight unavailable
+										{ formatComponentWeight(
+											component.weight
+										) }
 									</span>
 								</button>
 								<button

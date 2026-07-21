@@ -25,17 +25,17 @@ Weight status:
 
 ## Category candidates
 
-- `accessory`: 42
-- `cabinet`: 13
-- `drawer`: 40
-- `exterior`: 113
+- `accessory`: 64
+- `cabinet`: 14
+- `drawer`: 42
+- `exterior`: 267
 - `ladder_rack`: 1
 - `liner`: 99
 - `mounting_kit`: 225
 - `partition`: 66
-- `shelving`: 400
+- `shelving`: 379
 - `storage`: 19
-- `unknown`: 488
+- `unknown`: 330
 - `workbench`: 21
 
 ## Runtime candidates
