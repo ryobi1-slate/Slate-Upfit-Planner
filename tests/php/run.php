@@ -187,6 +187,18 @@ $tests['rejects unknown skus'] = static function () use ($validator, $fixture): 
     return $validator->validate($fixture) !== [];
 };
 
+$tests['accepts every runtime Westcan sku'] = static function () use ($validator, $fixture): bool {
+    foreach (['22-3436', '22-3437', '22-3438', '22-3439', '22-3440'] as $sku) {
+        $candidate = $fixture;
+        $candidate['placements'][0]['sku'] = $sku;
+        if ($validator->validate($candidate) !== []) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
 $tests['rejects integer-like unknown object keys'] = static function () use ($validator, $fixture): bool {
     $numericStringKey = json_decode(
         json_encode(array_merge($fixture, ['123' => 'unknown']), JSON_THROW_ON_ERROR),

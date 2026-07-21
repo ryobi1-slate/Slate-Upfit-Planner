@@ -23,6 +23,12 @@ export function BuildSheetRail() {
 	const { state, totals, issues } = usePlanner();
 	const status = fitStatus( issues );
 	const payload = totals.payload;
+	let remainingLabel = 'VIN required';
+	if ( payload.hasUnknownComponentWeight ) {
+		remainingLabel = 'Incomplete';
+	} else if ( payload.remaining !== null ) {
+		remainingLabel = `${ payload.remaining } lb`;
+	}
 
 	return (
 		<aside className="sup-rail" aria-label="Build sheet">
@@ -74,7 +80,9 @@ export function BuildSheetRail() {
 				<div className="sup-stat">
 					<span className="sup-stat__label">Component weight</span>
 					<span className="sup-stat__value">
-						{ payload.componentWeight } lb
+						{ payload.hasUnknownComponentWeight
+							? 'Incomplete'
+							: `${ payload.componentWeight } lb` }
 					</span>
 				</div>
 				<div className="sup-stat">
@@ -95,9 +103,7 @@ export function BuildSheetRail() {
 								: '' )
 						}
 					>
-						{ payload.remaining === null
-							? 'VIN required'
-							: `${ payload.remaining } lb` }
+						{ remainingLabel }
 					</span>
 				</div>
 				{ payload.capacity !== null && payload.overCapacity && (

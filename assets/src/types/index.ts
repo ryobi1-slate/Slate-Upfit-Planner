@@ -39,7 +39,8 @@ export type FitmentCode =
 	| 'WHEEL_WELL_END'
 	| 'SHELF_COLLISION'
 	| 'INCOMPATIBLE_WALL'
-	| 'INCOMPATIBLE_VEHICLE';
+	| 'INCOMPATIBLE_VEHICLE'
+	| 'UNKNOWN_COMPONENT';
 
 /* ─────────────────────────── Geometry ─────────────────────────── */
 
@@ -128,12 +129,14 @@ export interface PlannerComponent {
 	depth: Inches;
 	/** Height, inches. */
 	height: Inches;
-	/** Weight, pounds. */
-	weight: Pounds;
+	/** Verified weight in pounds, or null when the source is unavailable. */
+	weight: Pounds | null;
 	/** Shelf tier count (drawing only). */
 	tiers: number;
 	/** Walls this component may mount to. */
 	compatibleWalls: WallId[];
+	/** Exact vehicles this component has been approved for. */
+	compatibleVehicleIds: string[];
 	/** Roof variants this component fits. Empty === any. */
 	compatibleRoof: RoofType[];
 }
@@ -198,6 +201,7 @@ export interface WallUsage {
 /** Payload roll-up for the whole build. */
 export interface PayloadSummary {
 	componentWeight: Pounds;
+	hasUnknownComponentWeight: boolean;
 	capacity: Pounds | null;
 	remaining: Pounds | null;
 	overCapacity: boolean;

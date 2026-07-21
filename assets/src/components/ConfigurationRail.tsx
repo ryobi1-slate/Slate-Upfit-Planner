@@ -119,8 +119,11 @@ export function ConfigurationRail() {
 									</span>
 									<span className="sup-card__meta">
 										{ component.sku } · { component.length }
-										&quot; L × { component.depth }&quot; D ·{ ' ' }
-										{ component.weight } lb
+										&quot; L × { component.depth }&quot; D ×{ ' ' }
+										{ component.height }&quot; H ·{ ' ' }
+										{ component.tiers } shelves
+										<br />
+										Weight unavailable
 									</span>
 								</button>
 								<button

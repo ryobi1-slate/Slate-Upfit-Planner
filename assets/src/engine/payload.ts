@@ -32,11 +32,17 @@ export function calculatePayload(
 	componentsBySku: Record< string, PlannerComponent >
 ): PayloadSummary {
 	let componentWeight = 0;
+	let hasUnknownComponentWeight = false;
 	let driverWeight = 0;
 	let passengerWeight = 0;
 
 	for ( const p of placements ) {
-		const w = componentsBySku[ p.sku ]?.weight ?? 0;
+		const component = componentsBySku[ p.sku ];
+		if ( ! component || component.weight === null ) {
+			hasUnknownComponentWeight = true;
+			continue;
+		}
+		const w = component.weight;
 		componentWeight += w;
 		if ( p.wall === 'driver' ) {
 			driverWeight += w;
@@ -48,12 +54,13 @@ export function calculatePayload(
 	// A null capacity is intentionally unknown until a VIN-specific value is
 	// available. Never substitute zero or calculate a false remaining payload.
 	const remaining =
-		vehicle.payloadCapacity === null
+		vehicle.payloadCapacity === null || hasUnknownComponentWeight
 			? null
 			: vehicle.payloadCapacity - componentWeight;
 
 	return {
 		componentWeight,
+		hasUnknownComponentWeight,
 		capacity: vehicle.payloadCapacity,
 		remaining,
 		overCapacity: remaining !== null && remaining < 0,
