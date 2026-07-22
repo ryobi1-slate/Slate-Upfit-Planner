@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 
 import { App } from '../assets/src/app/App';
 
-( globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean } )
-	.IS_REACT_ACT_ENVIRONMENT = true;
+(
+	globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+ ).IS_REACT_ACT_ENVIRONMENT = true;
 
 function click( element: Element ) {
 	act( () => {
@@ -61,9 +62,9 @@ describe( 'product placement interactions', () => {
 
 		expect( container.textContent ).toContain( '1 components placed.' );
 		expect(
-			container.querySelector( '.sup-card__select' )?.getAttribute(
-				'aria-pressed'
-			)
+			container
+				.querySelector( '.sup-card__select' )
+				?.getAttribute( 'aria-pressed' )
 		).toBe( 'true' );
 
 		click( add );
@@ -72,47 +73,53 @@ describe( 'product placement interactions', () => {
 
 	it( 'commits the valid preview coordinates and blocks an invalid repeat', () => {
 		click( container.querySelector( '.sup-card__select' )! );
-		const capture = container.querySelector( '.sup-lane-capture' )!;
+		const capture = container.querySelector(
+			'.sup-plan-wall-capture.is-active'
+		)!;
 
 		pointerMove( capture );
 		expect(
-			container.querySelector( '.sup-preview' )?.getAttribute(
-				'pointer-events'
-			)
+			container
+				.querySelector( '.sup-plan-preview' )
+				?.getAttribute( 'pointer-events' )
 		).toBe( 'none' );
-		const preview = container.querySelector( '.sup-preview-fill' )!;
+		const preview = container.querySelector( '.sup-plan-preview rect' )!;
 		const previewX = preview.getAttribute( 'x' );
-		expect( container.querySelector( '.sup-preview-label' )?.textContent ).toBe(
-			'+ PLACE'
-		);
+		expect(
+			container.querySelector( '.sup-plan-preview text' )?.textContent
+		).toBe( '+ PLACE' );
 
 		click( capture );
 		expect( container.textContent ).toContain( '1 components placed.' );
 		expect(
 			container
-				.querySelector( '.sup-placement-body' )
+				.querySelector( '.sup-plan-placement__body' )
 				?.getAttribute( 'x' )
 		).toBe( previewX );
 
 		pointerMove( capture );
-		expect( container.querySelector( '.sup-preview-label' )?.textContent ).toBe(
-			'BLOCKED'
-		);
+		expect(
+			container.querySelector( '.sup-plan-preview text' )?.textContent
+		).toBe( 'BLOCKED' );
 		click( capture );
 		expect( container.textContent ).toContain( '1 components placed.' );
 	} );
 
 	it( 'keeps the presentational zone overlay out of the pointer hit path', () => {
 		expect(
-			container.querySelector( '.sup-zones' )?.getAttribute( 'pointer-events' )
+			container
+				.querySelector( '.sup-zones' )
+				?.getAttribute( 'pointer-events' )
 		).toBe( 'none' );
 	} );
 
 	it( 'preserves keyboard movement and deletion', () => {
 		click( container.querySelector( '.sup-card__add' )! );
-		const placement = container.querySelector( '.sup-placement' )!;
+		const placement = container.querySelector( '.sup-plan-placement' )!;
 		const initialX = Number(
-			container.querySelector( '.sup-placement-body' )?.getAttribute( 'x' )
+			container
+				.querySelector( '.sup-plan-placement__body' )
+				?.getAttribute( 'x' )
 		);
 
 		act( () => {
@@ -126,10 +133,10 @@ describe( 'product placement interactions', () => {
 		expect(
 			Number(
 				container
-					.querySelector( '.sup-placement-body' )
+					.querySelector( '.sup-plan-placement__body' )
 					?.getAttribute( 'x' )
 			)
-		).toBe( initialX + 5 );
+		).toBe( initialX + 6 );
 
 		act( () => {
 			placement.dispatchEvent(
