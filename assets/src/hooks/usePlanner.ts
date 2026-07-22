@@ -122,8 +122,8 @@ export function usePlanner() {
 	 * otherwise auto-finds the first legal open spot. No-op if nothing fits.
 	 */
 	const placeSelected = useCallback(
-		( wall: WallId, rawInches?: Inches ) => {
-			const sku = selectedSku;
+		( wall: WallId, rawInches?: Inches, skuOverride?: string ) => {
+			const sku = skuOverride ?? selectedSku;
 			const wallGeo = getWall( vehicle, wall );
 			const component = sku ? componentsBySku[ sku ] : undefined;
 			if ( ! sku || ! wallGeo || ! component ) {
@@ -145,6 +145,25 @@ export function usePlanner() {
 			}
 			if ( ! position ) {
 				return;
+			}
+			if ( rawInches !== undefined ) {
+				const probe: Placement = {
+					id: '__candidate',
+					sku,
+					wall,
+					position,
+				};
+				const fitment = checkPlacement(
+					probe,
+					component,
+					vehicle,
+					wallGeo,
+					placements,
+					componentsBySku
+				);
+				if ( fitment.severity === 'error' ) {
+					return;
+				}
 			}
 			dispatch( actions.placeComponent( sku, wall, position ) );
 		},

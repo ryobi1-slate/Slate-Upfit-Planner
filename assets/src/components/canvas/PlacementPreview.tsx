@@ -27,6 +27,7 @@ export function PlacementPreview( {
 		<g
 			className={ `sup-preview${ valid ? '' : ' sup-preview--invalid' }` }
 			aria-hidden="true"
+			pointerEvents="none"
 		>
 			<rect
 				className="sup-preview-fill"

@@ -24,7 +24,7 @@ export function ZoneOverlay( {
 	const laneBottom = laneTop + laneHeight;
 
 	return (
-		<g className="sup-zones" aria-hidden="true">
+		<g className="sup-zones" aria-hidden="true" pointerEvents="none">
 			{ /* No-mount + partition zones (hatched) */ }
 			{ wall.blockedZones.map( ( z, i ) => (
 				<g key={ `bz-${ i }` }>
