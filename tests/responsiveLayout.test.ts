@@ -16,9 +16,12 @@ function declarationsFor( selector: string ): string {
 }
 
 describe( 'responsive planner layout CSS', () => {
-	it( 'uses a shrinkable center track and shrinkable grid children', () => {
+	it( 'uses a dominant workspace and two-to-one lower section', () => {
 		expect( declarationsFor( '.sup-body' ) ).toContain(
-			'var(--sup-rail-width) minmax(0, 1fr) var(--sup-buildsheet-width)'
+			'minmax(0, 2fr) minmax(280px, 1fr)'
+		);
+		expect( declarationsFor( '.sup-body' ) ).toContain(
+			'"canvas canvas"'
 		);
 		expect( declarationsFor( '.sup-body > *' ) ).toContain(
 			'min-width: 0'
@@ -49,16 +52,25 @@ describe( 'responsive planner layout CSS', () => {
 		expect( tabletRules ).not.toContain( 'grid-template-columns: 676px' );
 	} );
 
-	it( 'wraps the existing navigation controls in phone-width containers', () => {
+	it( 'wraps page controls and catalog cards in phone-width containers', () => {
 		const phoneRules = css.slice(
 			css.indexOf(
 				'@container slate-upfit-planner (max-width: 640px)'
 			)
 		);
 
-		expect( phoneRules ).toContain( 'grid-template-rows: auto 1fr' );
-		expect( phoneRules ).toContain( 'flex-wrap: wrap' );
-		expect( phoneRules ).toContain( 'flex: 1 1 100%' );
+		expect( phoneRules ).toContain( '.sup-controls,' );
+		expect( phoneRules ).toContain(
+			'grid-template-columns: minmax(0, 1fr)'
+		);
+		expect( phoneRules ).toContain( 'flex-direction: column' );
+	} );
+
+	it( 'uses the Dealer Portal page-header hierarchy without a duplicate app nav', () => {
+		expect( declarationsFor( '.sup-page-header' ) ).toContain(
+			'border-bottom: 1px solid var(--slate-hair)'
+		);
+		expect( css ).not.toContain( '.sup-nav {' );
 	} );
 
 	it( 'keeps wide canvas content contained inside its own scroll region', () => {

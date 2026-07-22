@@ -1,5 +1,5 @@
 /**
- * Right build-sheet rail: fit status, wall usage, payload, and the issue list.
+ * Plan summary: fit status, wall usage, payload, and the issue list.
  */
 
 import { usePlanner } from '../hooks/usePlanner';
@@ -31,7 +31,15 @@ export function BuildSheetRail() {
 	}
 
 	return (
-		<aside className="sup-rail" aria-label="Build sheet">
+		<aside className="sup-summary" aria-label="Plan summary">
+			<div className="sup-section-heading">
+				<div>
+					<p className="sup-section-heading__kicker">
+						Configuration health
+					</p>
+					<h2>Plan summary</h2>
+				</div>
+			</div>
 			<section className="sup-panel">
 				<h2 className="sup-panel__title">Fit Status</h2>
 				<span className={ `sup-fit sup-fit--${ status.kind }` }>

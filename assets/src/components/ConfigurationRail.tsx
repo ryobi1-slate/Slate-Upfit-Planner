@@ -1,5 +1,5 @@
 /**
- * Left configuration rail: vehicle summary, wall switch, and the shelf catalog.
+ * Vehicle controls and approved-equipment catalog.
  * Selecting a product arms it for placement (hover + click on the canvas), and
  * "Add" auto-places it at the first legal open spot.
  */
@@ -34,8 +34,8 @@ export function ConfigurationRail() {
 	const { vehicle, activeWall, selectedSku } = state;
 
 	return (
-		<aside className="sup-rail" aria-label="Configuration">
-			<section className="sup-panel">
+		<aside className="sup-configuration" aria-label="Configuration">
+			<section className="sup-panel sup-controls">
 				<h2 className="sup-panel__title">Vehicle</h2>
 				<label className="sup-field" htmlFor="sup-vehicle-selector">
 					<span className="sup-field__label">
@@ -56,10 +56,10 @@ export function ConfigurationRail() {
 						) ) }
 					</select>
 				</label>
-				<p className="sup-panel__hint">
+				<p className="sup-panel__hint sup-controls__change-note">
 					Changing vehicles clears the current layout.
 				</p>
-				<p className="sup-panel__hint">
+				<p className="sup-panel__hint sup-controls__vehicle-meta">
 					{ vehicle.name } · { vehicle.length }&quot; ×{ ' ' }
 					{ vehicle.width }&quot; ·{ ' ' }
 					{ vehicle.payloadCapacity === null
@@ -92,16 +92,24 @@ export function ConfigurationRail() {
 						) ) }
 					</div>
 				</div>
-				<p className="sup-panel__hint">
+				<p className="sup-panel__hint sup-controls__remaining">
 					{ Math.max( 0, Math.round( remainingOnActiveWall ) ) }&quot;
 					mountable length remaining on this wall.
 				</p>
 			</section>
 
-			<section className="sup-panel">
-				<h2 className="sup-panel__title">Shelves</h2>
+			<section className="sup-panel sup-products">
+				<div className="sup-section-heading">
+					<div>
+						<p className="sup-section-heading__kicker">
+							Approved equipment
+						</p>
+						<h2>Product catalog</h2>
+					</div>
+				</div>
 				<p className="sup-panel__hint">
-					Select a shelf, then click the canvas to place — or use Add.
+					Select a shelf, then click the plan to place it — or use Add
+					to Plan.
 				</p>
 
 				<div className="sup-catalog">
@@ -152,7 +160,7 @@ export function ConfigurationRail() {
 										);
 									} }
 								>
-									+ Add
+									Add to Plan
 								</button>
 							</div>
 						);
