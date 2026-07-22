@@ -25,8 +25,23 @@ describe( 'responsive planner layout CSS', () => {
 		);
 	} );
 
-	it( 'stacks into a shrinkable single column below the existing breakpoint', () => {
-		const tabletRules = css.slice( css.indexOf( '@media (max-width: 900px)' ) );
+	it( 'selects responsive modes from planner width instead of viewport width', () => {
+		expect( declarationsFor( '.slate-upfit-planner-root' ) ).toContain(
+			'container-name: slate-upfit-planner'
+		);
+		expect( declarationsFor( '.slate-upfit-planner-root' ) ).toContain(
+			'container-type: inline-size'
+		);
+		expect( css ).not.toContain( '@media (max-width: 900px)' );
+		expect( css ).not.toContain( '@media (max-width: 640px)' );
+	} );
+
+	it( 'stacks into a shrinkable single column in constrained containers', () => {
+		const tabletRules = css.slice(
+			css.indexOf(
+				'@container slate-upfit-planner (max-width: 900px)'
+			)
+		);
 
 		expect( tabletRules ).toContain(
 			'grid-template-columns: minmax(0, 1fr)'
@@ -34,8 +49,12 @@ describe( 'responsive planner layout CSS', () => {
 		expect( tabletRules ).not.toContain( 'grid-template-columns: 676px' );
 	} );
 
-	it( 'wraps the existing navigation controls at phone widths', () => {
-		const phoneRules = css.slice( css.indexOf( '@media (max-width: 640px)' ) );
+	it( 'wraps the existing navigation controls in phone-width containers', () => {
+		const phoneRules = css.slice(
+			css.indexOf(
+				'@container slate-upfit-planner (max-width: 640px)'
+			)
+		);
 
 		expect( phoneRules ).toContain( 'grid-template-rows: auto 1fr' );
 		expect( phoneRules ).toContain( 'flex-wrap: wrap' );
