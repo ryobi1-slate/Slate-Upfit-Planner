@@ -29,6 +29,8 @@
 }
 
 .slate-upfit-planner-root {
+	container-name: slate-upfit-planner;
+	container-type: inline-size;
 	width: 100%;
 	max-width: 100%;
 	min-width: 0;
@@ -641,7 +643,7 @@
 }
 
 /* ---- Tablet-ready ---- */
-@media (max-width: 900px) {
+@container slate-upfit-planner (max-width: 900px) {
 	.sup-body {
 		grid-template-columns: minmax(0, 1fr);
 	}
@@ -655,7 +657,7 @@
 	}
 }
 
-@media (max-width: 640px) {
+@container slate-upfit-planner (max-width: 640px) {
 	.sup-shell {
 		grid-template-rows: auto 1fr;
 	}
