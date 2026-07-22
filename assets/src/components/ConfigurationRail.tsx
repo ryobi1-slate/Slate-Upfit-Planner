@@ -145,7 +145,11 @@ export function ConfigurationRail() {
 									aria-label={ `Add ${ component.name } to ${ activeWall } wall` }
 									onClick={ () => {
 										selectProduct( component.sku );
-										placeSelected( activeWall );
+										placeSelected(
+											activeWall,
+											undefined,
+											component.sku
+										);
 									} }
 								>
 									+ Add
