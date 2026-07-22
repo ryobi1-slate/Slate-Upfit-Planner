@@ -64,6 +64,11 @@ describe( 'responsive planner layout CSS', () => {
 			'grid-template-columns: minmax(0, 1fr)'
 		);
 		expect( phoneRules ).toContain( 'flex-direction: column' );
+		expect( phoneRules ).toContain( 'grid-row: auto' );
+		expect( phoneRules ).toContain( 'flex-wrap: wrap' );
+		expect( phoneRules ).toContain( 'width: 100%' );
+		expect( phoneRules ).toContain( 'min-width: 0' );
+		expect( phoneRules ).not.toContain( 'overflow-x: hidden' );
 	} );
 
 	it( 'uses the Dealer Portal page-header hierarchy without a duplicate app nav', () => {
