@@ -397,6 +397,11 @@
 	stroke: var(--slate-line);
 	stroke-width: 1.4;
 }
+.sup-plan-no-mount {
+	stroke: var(--slate-muted);
+	stroke-width: 1;
+	stroke-dasharray: 4 3;
+}
 .sup-plan-door {
 	fill: rgba(225, 223, 200, 0.52);
 	stroke: var(--slate-line);
@@ -452,6 +457,9 @@
 .sup-plan-wall-capture.is-active {
 	fill: rgba(64, 79, 75, 0.025);
 }
+.sup-plan-wall-capture.is-hovered {
+	fill: rgba(64, 79, 75, 0.045);
+}
 .sup-full-plan--armed .sup-plan-placement {
 	pointer-events: none;
 }
@@ -484,13 +492,27 @@
 	stroke-width: 3;
 }
 .sup-plan-placement--warning .sup-plan-placement__body {
-	stroke: var(--slate-arches);
+	stroke: var(--slate-warn);
 	stroke-width: 2.5;
 }
 .sup-plan-placement--error .sup-plan-placement__body {
 	fill: rgba(176, 74, 50, 0.15);
 	stroke: var(--slate-error);
 	stroke-width: 2.5;
+}
+.sup-plan-placement--selected.sup-plan-placement--warning
+	.sup-plan-placement__body,
+.sup-plan-placement--selected.sup-plan-placement--error
+	.sup-plan-placement__body {
+	stroke: var(--slate-arches);
+	stroke-width: 3;
+}
+.sup-plan-placement__conflict {
+	pointer-events: none;
+}
+.sup-plan-placement__warning-overlap {
+	fill: rgba(184, 121, 31, 0.16);
+	pointer-events: none;
 }
 .sup-plan-placement:focus-visible .sup-plan-placement__body {
 	stroke: var(--slate-arches);

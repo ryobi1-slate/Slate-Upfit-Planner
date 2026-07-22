@@ -2,7 +2,12 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { usePlanner } from '../../hooks/usePlanner';
 import { getWall } from '../../data/geometry';
-import type { Placement, PlannerComponent, WallId } from '../../types';
+import type {
+	FitmentResult,
+	Placement,
+	PlannerComponent,
+	WallId,
+} from '../../types';
 
 const PPI = 6;
 const DEPTH_SCALE = 3.2;
@@ -31,6 +36,7 @@ export function FullPlanCanvas() {
 	const driver = getWall( vehicle, 'driver' );
 	const svgRef = useRef< SVGSVGElement | null >( null );
 	const [ drag, setDrag ] = useState< DragState | null >( null );
+	const [ hoveredWall, setHoveredWall ] = useState< WallId | null >( null );
 	const width = LEFT + vehicle.length * PPI + 82;
 	const bottom = TOP + vehicle.width * 4.1;
 	const height = bottom + 86;
@@ -103,8 +109,12 @@ export function FullPlanCanvas() {
 	if ( ! passenger || ! driver ) {
 		return null;
 	}
-	const wheel = passenger.wheelWells[ 0 ];
+	const passengerWheels = passenger.wheelWells;
+	const driverWheels = driver.wheelWells;
 	const door = passenger.doorZones[ 0 ];
+	const passengerNoMountZones = passenger.blockedZones.filter(
+		( zone ) => zone.kind === 'no-mount'
+	);
 	const remaining = Object.fromEntries(
 		totals.wallUsage.map( ( item ) => [ item.wall, item.availableLength ] )
 	);
@@ -120,17 +130,25 @@ export function FullPlanCanvas() {
 			  } )
 			: null;
 	const capture = ( wall: WallId, y: number ) => ( {
+		'data-wall': wall,
 		x: U( 0 ),
 		y,
 		width: vehicle.length * PPI,
 		height: 64,
 		onPointerMove: ( event: React.PointerEvent ) => {
-			planner.switchWall( wall );
+			setHoveredWall( wall );
 			if ( selectedSku ) {
 				planner.previewAt( wall, pointerInches( event ) );
 			}
 		},
-		onPointerLeave: planner.clearPreview,
+		onPointerLeave: () => {
+			setHoveredWall( ( current ) =>
+				current === wall ? null : current
+			);
+			if ( selectedSku ) {
+				planner.clearPreview();
+			}
+		},
 		onClick: ( event: React.MouseEvent ) => {
 			planner.switchWall( wall );
 			if ( selectedSku ) {
@@ -234,6 +252,15 @@ export function FullPlanCanvas() {
 				>
 					<line y2="7" stroke="var(--slate-muted)" opacity=".42" />
 				</pattern>
+				<pattern
+					id="supPlanConflictHatch"
+					width="7"
+					height="7"
+					patternUnits="userSpaceOnUse"
+					patternTransform="rotate(45)"
+				>
+					<line y2="7" stroke="var(--slate-error)" strokeWidth="2" />
+				</pattern>
 			</defs>
 			<rect
 				width={ width }
@@ -263,15 +290,16 @@ export function FullPlanCanvas() {
 					54,
 					true
 				) }
-			{ wheel &&
+			{ passengerWheels.map( ( wheel, index ) =>
 				rail(
-					'E',
+					index === 0 ? 'E' : `E${ index + 1 }`,
 					`Wheel well ${ wheel.to - wheel.from }\"`,
 					wheel.from,
 					wheel.to,
 					54,
 					true
-				) }
+				)
+			) }
 			<rect
 				x={ U( 0 ) }
 				y={ TOP }
@@ -334,21 +362,40 @@ export function FullPlanCanvas() {
 						</text>
 					</>
 				) }
-				{ wheel && (
-					<>
+				{ passengerNoMountZones.map( ( zone, index ) => (
+					<g key={ `passenger-no-mount-${ index }` }>
+						<rect
+							x={ U( zone.from ) }
+							y={ TOP }
+							width={ ( zone.to - zone.from ) * PPI }
+							height="64"
+							fill="url(#supPlanHatch)"
+							className="sup-plan-no-mount"
+							data-zone-kind={ zone.kind }
+							data-from={ zone.from }
+							data-to={ zone.to }
+						/>
+						<text
+							x={ ( U( zone.from ) + U( zone.to ) ) / 2 }
+							y={ TOP + 34 }
+							textAnchor="middle"
+							className="sup-plan-zone-label"
+						>
+							STAY CLEAR
+						</text>
+					</g>
+				) ) }
+				{ passengerWheels.map( ( wheel, index ) => (
+					<g key={ `passenger-wheel-${ index }` }>
 						<rect
 							x={ U( wheel.from ) }
 							y={ TOP }
 							width={ ( wheel.to - wheel.from ) * PPI }
 							height={ wheel.depth * DEPTH_SCALE }
 							className="sup-plan-wheel"
-						/>
-						<rect
-							x={ U( wheel.from ) }
-							y={ bottom - wheel.depth * DEPTH_SCALE }
-							width={ ( wheel.to - wheel.from ) * PPI }
-							height={ wheel.depth * DEPTH_SCALE }
-							className="sup-plan-wheel"
+							data-wheel-wall="passenger"
+							data-from={ wheel.from }
+							data-to={ wheel.to }
 						/>
 						<text
 							x={ ( U( wheel.from ) + U( wheel.to ) ) / 2 }
@@ -358,6 +405,20 @@ export function FullPlanCanvas() {
 						>
 							WHEEL WELL
 						</text>
+					</g>
+				) ) }
+				{ driverWheels.map( ( wheel, index ) => (
+					<g key={ `driver-wheel-${ index }` }>
+						<rect
+							x={ U( wheel.from ) }
+							y={ bottom - wheel.depth * DEPTH_SCALE }
+							width={ ( wheel.to - wheel.from ) * PPI }
+							height={ wheel.depth * DEPTH_SCALE }
+							className="sup-plan-wheel"
+							data-wheel-wall="driver"
+							data-from={ wheel.from }
+							data-to={ wheel.to }
+						/>
 						<text
 							x={ ( U( wheel.from ) + U( wheel.to ) ) / 2 }
 							y={ bottom - 4 }
@@ -366,8 +427,8 @@ export function FullPlanCanvas() {
 						>
 							WHEEL WELL
 						</text>
-					</>
-				) }
+					</g>
+				) ) }
 			</g>
 			<text
 				x={ ( U( 0 ) + U( vehicle.length ) ) / 2 }
@@ -410,13 +471,13 @@ export function FullPlanCanvas() {
 			<rect
 				className={ `sup-plan-wall-capture${
 					state.activeWall === 'passenger' ? ' is-active' : ''
-				}` }
+				}${ hoveredWall === 'passenger' ? ' is-hovered' : '' }` }
 				{ ...capture( 'passenger', TOP ) }
 			/>
 			<rect
 				className={ `sup-plan-wall-capture${
 					state.activeWall === 'driver' ? ' is-active' : ''
-				}` }
+				}${ hoveredWall === 'driver' ? ' is-hovered' : '' }` }
 				{ ...capture( 'driver', bottom - 64 ) }
 			/>
 			{ placements.map( ( placement ) => {
@@ -428,9 +489,7 @@ export function FullPlanCanvas() {
 						component={ component }
 						bottom={ bottom }
 						selected={ placement.id === selectedPlacementId }
-						fit={
-							planner.fitmentFor( placement )?.severity ?? 'ok'
-						}
+						fit={ planner.fitmentFor( placement ) }
 						U={ U }
 						onSelect={ planner.selectPlacement }
 						onDrag={ ( id, event ) =>
@@ -508,7 +567,7 @@ function PlanPlacement( {
 	component: PlannerComponent;
 	bottom: number;
 	selected: boolean;
-	fit: string;
+	fit: FitmentResult | null;
 	U: ( n: number ) => number;
 	onSelect: ( id: string ) => void;
 	onDrag: ( id: string, e: React.PointerEvent ) => void;
@@ -519,12 +578,18 @@ function PlanPlacement( {
 	const w = component.length * PPI;
 	const h = Math.max( 48, component.depth * DEPTH_SCALE );
 	const y = placement.wall === 'passenger' ? TOP : bottom - h;
+	const severity = fit?.severity ?? 'ok';
+	const rangedIssues = ( fit?.issues ?? [] ).filter(
+		( issue ) => issue.range
+	);
 	return (
 		<g
 			data-placement-id={ placement.id }
 			className={ `sup-plan-placement${
 				selected ? ' sup-plan-placement--selected' : ''
-			}${ fit !== 'ok' ? ` sup-plan-placement--${ fit }` : '' }` }
+			}${
+				severity !== 'ok' ? ` sup-plan-placement--${ severity }` : ''
+			}` }
 			role="button"
 			tabIndex={ 0 }
 			aria-pressed={ selected }
@@ -556,6 +621,37 @@ function PlanPlacement( {
 				height={ h }
 				className="sup-plan-placement__body"
 			/>
+			{ rangedIssues.map( ( issue, index ) => {
+				const [ from, to ] = issue.range!;
+				const overlapFrom = Math.max( from, placement.position.x );
+				const overlapTo = Math.min(
+					to,
+					placement.position.x + component.length
+				);
+				return (
+					<rect
+						key={ `${ issue.code }-${ index }` }
+						x={ U( overlapFrom ) }
+						y={ y + 1 }
+						width={ Math.max(
+							2,
+							( overlapTo - overlapFrom ) * PPI
+						) }
+						height={ h - 2 }
+						className={
+							issue.severity === 'error'
+								? 'sup-plan-placement__conflict'
+								: 'sup-plan-placement__warning-overlap'
+						}
+						fill={
+							issue.severity === 'error'
+								? 'url(#supPlanConflictHatch)'
+								: undefined
+						}
+						data-issue-code={ issue.code }
+					/>
+				);
+			} ) }
 			{ Array.from( { length: Math.max( 0, component.tiers - 1 ) } ).map(
 				( _, i ) => (
 					<line
