@@ -9,7 +9,9 @@ const css = readFileSync(
 
 function declarationsFor( selector: string ): string {
 	const escaped = selector.replace( /[.*+?^${}()|[\]\\]/gu, '\\$&' );
-	const match = css.match( new RegExp( `${ escaped }\\s*\\{([^}]*)\\}`, 'u' ) );
+	const match = css.match(
+		new RegExp( `${ escaped }\\s*\\{([^}]*)\\}`, 'u' )
+	);
 
 	expect( match ).not.toBeNull();
 	return match?.[ 1 ] ?? '';
@@ -20,9 +22,7 @@ describe( 'responsive planner layout CSS', () => {
 		expect( declarationsFor( '.sup-body' ) ).toContain(
 			'minmax(0, 2fr) minmax(280px, 1fr)'
 		);
-		expect( declarationsFor( '.sup-body' ) ).toContain(
-			'"canvas canvas"'
-		);
+		expect( declarationsFor( '.sup-body' ) ).toContain( '"canvas canvas"' );
 		expect( declarationsFor( '.sup-body > *' ) ).toContain(
 			'min-width: 0'
 		);
@@ -41,9 +41,7 @@ describe( 'responsive planner layout CSS', () => {
 
 	it( 'stacks into a shrinkable single column in constrained containers', () => {
 		const tabletRules = css.slice(
-			css.indexOf(
-				'@container slate-upfit-planner (max-width: 900px)'
-			)
+			css.indexOf( '@container slate-upfit-planner (max-width: 900px)' )
 		);
 
 		expect( tabletRules ).toContain(
@@ -54,9 +52,7 @@ describe( 'responsive planner layout CSS', () => {
 
 	it( 'wraps page controls and catalog cards in phone-width containers', () => {
 		const phoneRules = css.slice(
-			css.indexOf(
-				'@container slate-upfit-planner (max-width: 640px)'
-			)
+			css.indexOf( '@container slate-upfit-planner (max-width: 640px)' )
 		);
 
 		expect( phoneRules ).toContain( '.sup-controls,' );
@@ -87,6 +83,9 @@ describe( 'responsive planner layout CSS', () => {
 		);
 		expect( declarationsFor( '.sup-wall-canvas' ) ).toContain(
 			'min-width: 640px'
+		);
+		expect( declarationsFor( '.sup-full-plan' ) ).toContain(
+			'min-width: 920px'
 		);
 	} );
 
