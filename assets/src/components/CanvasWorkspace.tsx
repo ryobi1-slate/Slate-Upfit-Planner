@@ -16,12 +16,17 @@ export function CanvasWorkspace() {
 	return (
 		<section className="sup-panel sup-canvas" aria-label="Canvas workspace">
 			<div className="sup-canvas__header">
-				<h2 className="sup-panel__title">
-					{ state.vehicle.name } —{ ' ' }
-					{ activeWallGeometry?.label ?? 'No wall' }
-				</h2>
-				<span className="sup-card__meta">
-					{ onWall.length } placed · top-down · 2D
+				<div>
+					<p className="sup-section-heading__kicker">
+						Technical wall plan
+					</p>
+					<h2>
+						{ state.vehicle.name } —{ ' ' }
+						{ activeWallGeometry?.label ?? 'No wall' }
+					</h2>
+				</div>
+				<span className="sup-canvas__count">
+					{ onWall.length } placed · 1&quot; snap
 				</span>
 			</div>
 
