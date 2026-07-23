@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Slate\UpfitPlanner\Rest;
 
+use Slate\UpfitPlanner\BuildSheet\BuildSheetIntakeService;
 use Slate\UpfitPlanner\Integration\HostAdapterInterface;
 use Slate\UpfitPlanner\Persistence\ConfigurationRepository;
 use Slate\UpfitPlanner\Support\SchemaValidator;
@@ -29,7 +30,8 @@ final class RestController
     public function __construct(
         private readonly HostAdapterInterface $hostAdapter,
         private readonly ConfigurationRepository $repository = new ConfigurationRepository(),
-        private readonly SchemaValidator $validator = new SchemaValidator()
+        private readonly SchemaValidator $validator = new SchemaValidator(),
+        private readonly BuildSheetIntakeService $buildSheetIntake = new BuildSheetIntakeService()
     ) {
     }
 
@@ -51,6 +53,12 @@ final class RestController
             'methods' => 'POST',
             'callback' => [$this, 'addToQuote'],
             'permission_callback' => [$this, 'canWrite'],
+        ]);
+
+        register_rest_route(self::NAMESPACE, '/build-sheet-intake', [
+            'methods' => 'POST',
+            'callback' => [$this, 'intakeBuildSheet'],
+            'permission_callback' => [$this, 'canUploadBuildSheet'],
         ]);
     }
 
@@ -84,6 +92,23 @@ final class RestController
             return new WP_Error(
                 'rest_cookie_invalid_nonce',
                 'Invalid or missing request nonce.',
+                ['status' => 403]
+            );
+        }
+
+        return true;
+    }
+
+    public function canUploadBuildSheet(WP_REST_Request $request): bool|WP_Error
+    {
+        $writePermission = $this->canWrite($request);
+        if ($writePermission !== true) {
+            return $writePermission;
+        }
+        if (! current_user_can('upload_files')) {
+            return new WP_Error(
+                'rest_forbidden',
+                'Permission to upload build sheets is required.',
                 ['status' => 403]
             );
         }
@@ -159,5 +184,40 @@ final class RestController
             $result,
             ! empty($result['ok']) ? 200 : $this->failureStatus($result)
         );
+    }
+
+    public function intakeBuildSheet(WP_REST_Request $request): WP_REST_Response
+    {
+        $files = $request->get_file_params();
+        $file = isset($files['build_sheet']) && is_array($files['build_sheet'])
+            ? $files['build_sheet']
+            : null;
+        $result = $this->buildSheetIntake->process($file);
+
+        return new WP_REST_Response(
+            $result,
+            ! empty($result['ok']) ? 200 : $this->buildSheetFailureStatus($result)
+        );
+    }
+
+    /** @param array<string, mixed> $result */
+    private function buildSheetFailureStatus(array $result): int
+    {
+        $code = $result['code'] ?? null;
+        if ($code === 'file_too_large') {
+            return 413;
+        }
+        if (in_array($code, [
+            'missing_file',
+            'upload_error',
+            'empty_file',
+            'invalid_extension',
+            'invalid_mime',
+            'invalid_pdf_signature',
+        ], true)) {
+            return 400;
+        }
+
+        return 422;
     }
 }

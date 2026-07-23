@@ -3,12 +3,28 @@
   "description": "Standalone WordPress commercial van upfit planner.",
   "type": "wordpress-plugin",
   "license": "proprietary",
+  "config": {
+    "platform": {
+      "php": "8.1.0"
+    },
+    "sort-packages": true
+  },
   "require": {
-    "php": ">=8.1"
+    "php": ">=8.1",
+    "smalot/pdfparser": "^2.12.5"
   },
   "autoload": {
     "psr-4": {
       "Slate\\UpfitPlanner\\": "src/"
     }
+  },
+  "require-dev": {
+    "humbug/php-scoper": "0.17.7"
+  },
+  "scripts": {
+    "scope-dependencies": [
+      "@php vendor/bin/php-scoper add-prefix --config=.php-scoper.php --output-dir=vendor-prefixed --force --no-interaction",
+      "@php scripts/build-scoped-runtime.php"
+    ]
   }
 }

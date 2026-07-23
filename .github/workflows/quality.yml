@@ -26,7 +26,16 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.1"
+          tools: composer:v2
           coverage: none
+
+      - name: Verify PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Verify isolated runtime
+        run: |
+          composer scope-dependencies
+          git diff --exit-code -- vendor-prefixed
 
       - name: Install dependencies
         run: npm ci
@@ -48,4 +57,4 @@ jobs:
         run: find . -path ./node_modules -prune -o -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Check whitespace
-        run: git diff --check
+        run: git diff --check -- . ':(exclude)vendor-prefixed/**'

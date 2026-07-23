@@ -148,6 +148,31 @@
 	color: var(--slate-muted);
 }
 
+.sup-build-sheet-intake {
+	display: grid;
+	gap: 12px;
+}
+
+.sup-build-sheet-intake input[type="file"],
+.sup-build-sheet-intake input {
+	max-width: 100%;
+	min-width: 0;
+}
+
+.sup-build-sheet-review {
+	display: grid;
+	gap: 10px;
+	padding-top: 12px;
+	border-top: 1px solid var(--slate-hair);
+}
+
+.sup-build-sheet-field small {
+	display: block;
+	margin-top: 3px;
+	color: var(--slate-muted);
+	overflow-wrap: anywhere;
+}
+
 .sup-configuration {
 	display: contents;
 }

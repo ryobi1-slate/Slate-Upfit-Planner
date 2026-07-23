@@ -11,6 +11,7 @@
 
 import type { BootstrapContext } from './bootstrap';
 import type { ConfigurationPayload } from '../types';
+import type { BuildSheetIntakeResponse } from '../domain/buildSheetIntake';
 
 export interface RestResult< T = unknown > {
 	ok: boolean;
@@ -74,6 +75,42 @@ export class RestClient {
 		return { ok: response.ok, status: response.status, data, errors };
 	}
 
+	private async upload< T >(
+		path: string,
+		body: FormData
+	): Promise< RestResult< T > > {
+		if ( ! this.ctx.restUrl ) {
+			return {
+				ok: false,
+				status: 0,
+				data: null,
+				errors: [ 'REST is unavailable in standalone mode.' ],
+			};
+		}
+		const response = await fetch( `${ this.ctx.restUrl }${ path }`, {
+			method: 'POST',
+			headers: { 'X-WP-Nonce': this.ctx.restNonce },
+			body,
+		} );
+		let data: T | null = null;
+		try {
+			data = ( await response.json() ) as T;
+		} catch {
+			data = null;
+		}
+		const message =
+			data && typeof data === 'object' && 'message' in data
+				? String( ( data as { message?: unknown } ).message ?? '' )
+				: '';
+
+		return {
+			ok: response.ok,
+			status: response.status,
+			data,
+			errors: message ? [ message ] : [],
+		};
+	}
+
 	getContext() {
 		return this.request( '/context', { method: 'GET' } );
 	}
@@ -90,5 +127,15 @@ export class RestClient {
 			method: 'POST',
 			body: JSON.stringify( payload ),
 		} );
+	}
+
+	uploadBuildSheet( file: File ) {
+		const body = new FormData();
+		body.append( 'build_sheet', file );
+
+		return this.upload< BuildSheetIntakeResponse >(
+			'/build-sheet-intake',
+			body
+		);
 	}
 }
