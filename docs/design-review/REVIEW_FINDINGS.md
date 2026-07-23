@@ -11,7 +11,7 @@
 
 ## Pages Reviewed
 
-- 
+-
 
 ## Viewports Reviewed
 
@@ -24,7 +24,7 @@
 
 ## Dealer Portal Design-System Observations
 
-- 
+-
 
 ## Verified Usability Defects
 
@@ -71,14 +71,14 @@ Use the finding template above and explain why the preference was rejected.
 
 ## Three Strongest Recommendations
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Items Requiring Repository Inspection
 
-- 
+-
 
 ## Final Verdict
 
-- 
+-
