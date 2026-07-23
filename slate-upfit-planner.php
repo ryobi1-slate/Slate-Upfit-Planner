@@ -20,27 +20,28 @@ define('SLATE_UPFIT_PLANNER_FILE', __FILE__);
 define('SLATE_UPFIT_PLANNER_DIR', plugin_dir_path(__FILE__));
 define('SLATE_UPFIT_PLANNER_URL', plugin_dir_url(__FILE__));
 
-$slate_upfit_planner_autoload = SLATE_UPFIT_PLANNER_DIR . 'vendor/autoload.php';
+$slate_upfit_planner_autoload = SLATE_UPFIT_PLANNER_DIR . 'vendor-prefixed/autoload.php';
 
 if (is_readable($slate_upfit_planner_autoload)) {
     require_once $slate_upfit_planner_autoload;
-} else {
-    // Lightweight PSR-4 fallback so the plugin runs before `composer install`.
-    spl_autoload_register(static function (string $class): void {
-        $prefix = 'Slate\\UpfitPlanner\\';
-
-        if (! str_starts_with($class, $prefix)) {
-            return;
-        }
-
-        $relative = substr($class, strlen($prefix));
-        $path = SLATE_UPFIT_PLANNER_DIR . 'src/' . str_replace('\\', '/', $relative) . '.php';
-
-        if (is_readable($path)) {
-            require_once $path;
-        }
-    });
 }
+
+// First-party classes remain independent from the isolated dependency runtime.
+spl_autoload_register(static function (string $class): void {
+    $prefix = 'Slate\\UpfitPlanner\\';
+    $vendorPrefix = $prefix . 'Vendor\\';
+
+    if (! str_starts_with($class, $prefix) || str_starts_with($class, $vendorPrefix)) {
+        return;
+    }
+
+    $relative = substr($class, strlen($prefix));
+    $path = SLATE_UPFIT_PLANNER_DIR . 'src/' . str_replace('\\', '/', $relative) . '.php';
+
+    if (is_readable($path)) {
+        require_once $path;
+    }
+});
 
 add_action('plugins_loaded', static function (): void {
     \Slate\UpfitPlanner\Plugin::instance()->boot();

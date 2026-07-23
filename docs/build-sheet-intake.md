@@ -36,18 +36,27 @@ file after the request.
 
 ## Extraction dependency
 
-Embedded text is extracted by `smalot/pdfparser` 2.12.5, locked by Composer and
-packaged in `vendor/`. The library is LGPL-3.0; its mbstring polyfill is MIT.
-The installed dependency footprint is approximately 506 KiB. It is pure PHP,
-requires no shell process or external service, and is compatible with the
-plugin's PHP 8.1 minimum. CI performs a locked Composer install before tests.
+Embedded text is extracted by `smalot/pdfparser` 2.12.5, locked by Composer.
+The library is LGPL-3.0; its mbstring polyfill is MIT. The production runtime
+is generated into `vendor-prefixed/` under the
+`Slate\UpfitPlanner\Vendor` namespace using the development-only PHP-Scoper
+build tool. Only the two runtime packages and their license notices are
+packaged; PHP-Scoper and its development dependencies are excluded.
 
-WordPress.com compatibility still depends on the deployment accepting the
-committed Composer runtime. The plugin fails closed with `unsupported_pdf` if
-the parser class is unavailable.
+The parser is pure PHP, requires no shell process or external service at
+request time, and is compatible with the plugin's PHP 8.1 minimum. CI performs
+a locked Composer install, regenerates the isolated runtime, and fails if it
+differs from the committed build.
 
-Parser work is bounded to 10 MiB input, 50 pages, 200,000 extracted characters,
-and 100 candidate option codes.
+WordPress.com loads the committed isolated autoloader directly, so deployment
+does not need Composer. The plugin fails closed with `unsupported_pdf` if the
+isolated parser class is unavailable. The prefix prevents another plugin's
+Smalot or Symfony package version from satisfying this plugin's class requests.
+
+Parser work is bounded to 10 MiB input, 50 pages, 5,000 objects, 2,000 streams,
+128 KiB per declared stream, 8 MiB per Flate-decoded stream, 200,000 extracted
+characters, and 100 candidate option codes. Image content is discarded.
+Encrypted PDFs and higher-risk LZW, run-length, and ASCII85 filters fail closed.
 
 ## Response
 

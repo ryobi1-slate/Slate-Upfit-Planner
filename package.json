@@ -9,9 +9,9 @@
     "lint": "wp-scripts lint-js assets/src",
     "lint:js": "wp-scripts lint-js assets/src",
     "typecheck": "tsc --noEmit",
-    "test": "wp-scripts test-unit-js --runInBand && php tests/php/run.php",
+    "test": "wp-scripts test-unit-js --runInBand && php tests/php/run.php && php tests/php/plugin-bootstrap.php",
     "test:js": "wp-scripts test-unit-js --runInBand",
-    "test:php": "php tests/php/run.php",
+    "test:php": "php tests/php/run.php && php tests/php/plugin-bootstrap.php",
     "format": "wp-scripts format assets/src"
   },
   "dependencies": {

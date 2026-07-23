@@ -1,5 +1,6 @@
 node_modules/
 .pnpm-store/
+vendor/
 .DS_Store
 *.log
 .env

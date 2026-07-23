@@ -58,16 +58,29 @@ final class MercedesBuildSheetParser
     /** @return list<string> */
     private function optionCodes(string $text): array
     {
-        preg_match_all('/(?<![A-Z0-9])([A-Z][A-Z0-9]{2})(?![A-Z0-9])/u', $text, $matches);
-        $codes = array_diff($matches[1] ?? [], ['VIN', 'PDF']);
+        $knownPattern = implode('|', array_map('preg_quote', array_keys(self::OPTION_CODES)));
+        preg_match_all('/(?<![A-Z0-9])(' . $knownPattern . ')(?![A-Z0-9])/u', $text, $known);
+        preg_match_all('/^\s*([A-Z][A-Z0-9]{2})(?:\s+|$)/mu', $text, $lineCodes);
+        preg_match_all('/\boption\s+codes?\s*[:#-]\s*([^\r\n]+)/iu', $text, $sections);
 
-        return array_slice(array_values(array_unique($codes)), 0, 100);
+        $codes = $known[1] ?? [];
+        $codes = array_merge($codes, $lineCodes[1] ?? []);
+        foreach ($sections[1] ?? [] as $section) {
+            preg_match_all('/(?<![A-Z0-9])([A-Z][A-Z0-9]{2})(?![A-Z0-9])/u', $section, $matches);
+            $codes = array_merge($codes, $matches[1] ?? []);
+        }
+
+        return array_slice(array_values(array_unique(array_diff($codes, ['VIN', 'PDF']))), 0, 100);
     }
 
     private function vinField(string $text): array
     {
-        preg_match_all('/\b[A-HJ-NPR-Z0-9]{17}\b/i', strtoupper($text), $matches);
-        foreach ($matches[0] ?? [] as $vin) {
+        preg_match_all(
+            '/\b(?:VIN|vehicle\s+identification\s+number)\s*[:#-]?\s*([A-HJ-NPR-Z0-9]{17})\b/i',
+            strtoupper($text),
+            $matches
+        );
+        foreach ($matches[1] ?? [] as $vin) {
             if (
                 count(array_unique(str_split($vin))) > 2
                 && ! str_contains($vin, 'TEST')
