@@ -7,6 +7,7 @@
 import { usePlanner } from '../hooks/usePlanner';
 import { PLANNING_GEOMETRY_WARNING } from '../data/geometry';
 import type { PlannerComponent, WallId } from '../types';
+import { BuildSheetIntake } from './BuildSheetIntake';
 
 /**
  * Format only verified component weights for catalog display.
@@ -35,6 +36,7 @@ export function ConfigurationRail() {
 
 	return (
 		<aside className="sup-configuration" aria-label="Configuration">
+			<BuildSheetIntake />
 			<section className="sup-panel sup-controls">
 				<h2 className="sup-panel__title">Vehicle</h2>
 				<label className="sup-field" htmlFor="sup-vehicle-selector">
